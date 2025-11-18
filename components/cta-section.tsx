@@ -1,6 +1,6 @@
-import React from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function CTASection() {
   return (
@@ -15,18 +15,19 @@ export default function CTASection() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-lg px-8">
-              <Link href="/editor">
-                Bắt đầu chỉnh sửa - Miễn phí
-              </Link>
+              <Link href="/editor">Bắt đầu chỉnh sửa - Miễn phí</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8">
-              <Link href="#features">
-                Xem tính năng
-              </Link>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-lg px-8"
+            >
+              <Link href="#features">Xem tính năng</Link>
             </Button>
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

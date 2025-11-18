@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@repo/shadcn-ui/lib/utils";
+import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 import {
   HoverCard,
@@ -59,7 +59,7 @@ export const GlimpseImage = ({
   <img
     alt={alt ?? ""}
     className={cn(
-      "mb-4 aspect-[120/63] w-full rounded-md border object-cover",
+      "mb-4 aspect-120/63 w-full rounded-md border object-cover",
       className
     )}
     {...props}
