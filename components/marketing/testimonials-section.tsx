@@ -9,7 +9,7 @@ const testimonials = [
     role: "Graphic Designer",
     avatar: "NA",
     content:
-      "VibeEdit giúp tôi chỉnh sửa ảnh nhanh chóng mà không cần mở Photoshop. Filters rất đẹp và dễ sử dụng!",
+      "VibeEditor giúp tôi chỉnh sửa ảnh nhanh chóng mà không cần mở Photoshop. Filters rất đẹp và dễ sử dụng!",
     rating: 5,
   },
   {
@@ -36,10 +36,10 @@ export default function TestimonialsSection() {
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">
-            Người dùng nói gì về VibeEdit
+            Người dùng nói gì về VibeEditor
           </h2>
           <p className="text-xl text-muted-foreground">
-            Hàng nghìn người đã tin dùng VibeEdit cho công việc hàng ngày
+            Hàng nghìn người đã tin dùng VibeEditor cho công việc hàng ngày
           </p>
         </div>
 

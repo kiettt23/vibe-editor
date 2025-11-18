@@ -23,7 +23,7 @@ export default function CTASection() {
               variant="outline"
               className="text-lg px-8"
             >
-              <Link href="#features">Xem tính năng</Link>
+              <Link href="features">Xem tính năng</Link>
             </Button>
           </div>
         </div>

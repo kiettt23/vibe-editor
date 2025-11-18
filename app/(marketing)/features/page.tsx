@@ -102,7 +102,7 @@ const coreFeatures = [
     icon: Sparkles,
     title: "No Watermark (Pro)",
     description:
-      "Free tier có watermark nhỏ ở góc. Pro users export sạch sẽ, không watermark. Watermark text: 'Created with VibeEdit'.",
+      "Free tier có watermark nhỏ ở góc. Pro users export sạch sẽ, không watermark. Watermark text: 'Created with VibeEditor'.",
     badge: "Pro",
   },
 ];
@@ -121,16 +121,16 @@ export default function FeaturesPage() {
     <div className="min-h-screen bg-background">
       <HeroHeader />
 
-      <main className="container mx-auto px-6 py-16">
+      <main className="container mx-auto px-6 pt-48 pb-16">
         {/* Hero Section */}
-        <div className="max-w-4xl mx-auto text-center mb-16">
+        <div className="max-w-4xl mx-auto text-center mb-20">
           <h1 className="text-5xl font-bold mb-6">
             Mọi tính năng bạn cần
-            <br />
-            <span className="text-primary">Trong một công cụ</span>
+            <br className="mb-4" />
+            <span className="block mt-2 text-primary">Trong một công cụ</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
-            VibeEdit cung cấp đầy đủ tính năng chỉnh sửa ảnh chuyên nghiệp. Từ
+            VibeEditor cung cấp đầy đủ tính năng chỉnh sửa ảnh chuyên nghiệp. Từ
             basic adjustments đến advanced filters, tất cả đều có sẵn.
           </p>
           <div className="flex gap-4 justify-center">

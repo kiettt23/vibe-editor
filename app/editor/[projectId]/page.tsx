@@ -7,19 +7,23 @@ interface EditorProjectPageProps {
   params: Promise<{ projectId: string }>;
 }
 
-export async function generateMetadata({ params }: EditorProjectPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: EditorProjectPageProps): Promise<Metadata> {
   const { projectId } = await params;
   const project = await getProject(projectId);
 
   return {
-    title: project ? `${project.name} | Editor` : "Editor | VibeEdit",
+    title: project ? `${project.name} | Editor` : "Editor | VibeEditor",
     description: "Chỉnh sửa dự án của bạn",
   };
 }
 
-export default async function EditorProjectPage({ params }: EditorProjectPageProps) {
+export default async function EditorProjectPage({
+  params,
+}: EditorProjectPageProps) {
   const { projectId } = await params;
-  
+
   // Fetch project server-side
   const project = await getProject(projectId);
 

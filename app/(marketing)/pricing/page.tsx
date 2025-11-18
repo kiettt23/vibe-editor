@@ -18,7 +18,7 @@ const plans = [
   {
     name: "Miễn phí",
     price: "0đ",
-    description: "Hoàn hảo để dùng thử VibeEdit",
+    description: "Hoàn hảo để dùng thử VibeEditor",
     features: [
       "Upload ảnh không giới hạn",
       "Lưu tối đa 5 dự án",
@@ -274,7 +274,7 @@ export default function PricingPage() {
         <div className="container mx-auto px-4 py-20 text-center">
           <h2 className="mb-4 text-3xl font-bold">Sẵn sàng bắt đầu?</h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-            Tham gia cùng hàng ngàn người sáng tạo đang sử dụng VibeEdit để tạo
+            Tham gia cùng hàng ngàn người sáng tạo đang sử dụng VibeEditor để tạo
             ra những hình ảnh tuyệt đẹp.
           </p>
           <div className="flex items-center justify-center gap-4">

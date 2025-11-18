@@ -14,7 +14,7 @@ const plans = [
   {
     name: "Miễn phí",
     price: "0đ",
-    description: "Hoàn hảo để dùng thử VibeEdit",
+    description: "Hoàn hảo để dùng thử VibeEditor",
     features: [
       "Chỉnh sửa cơ bản không giới hạn",
       "Lưu tối đa 5 dự án",

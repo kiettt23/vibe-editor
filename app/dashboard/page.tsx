@@ -10,7 +10,7 @@ import { ProjectList } from "./_components/ProjectList";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard | VibeEdit",
+  title: "Dashboard | VibeEditor",
   description: "Quản lý các dự án chỉnh sửa ảnh của bạn",
 };
 

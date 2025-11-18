@@ -16,7 +16,7 @@ export class ExportManager {
     }
 
     const watermark = new Konva.Text({
-      text: "Created with VibeEdit",
+      text: "Created with VibeEditor",
       fontSize: Math.max(stage.width() * 0.02, 16), // Responsive size
       fontFamily: "Inter, sans-serif",
       fill: "#ffffff",

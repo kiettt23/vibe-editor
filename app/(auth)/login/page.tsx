@@ -2,7 +2,7 @@ import { LoginForm } from "./_components/LoginForm";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Đăng Nhập | VibeEdit",
+  title: "Đăng Nhập | VibeEditor",
   description: "Đăng nhập để lưu và quản lý dự án chỉnh sửa ảnh của bạn",
 };
 

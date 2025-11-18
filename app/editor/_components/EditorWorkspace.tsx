@@ -85,6 +85,8 @@ export function EditorWorkspace({
   useLayoutEffect(() => {
     if (!canvasContainerRef.current || isCanvasReady) return;
 
+    let mounted = true;
+
     const initCanvas = () => {
       try {
         const canvasManager = getCanvasManager();
@@ -99,27 +101,32 @@ export function EditorWorkspace({
         const stageInstance = canvasManager.getStage();
         const layerInstance = canvasManager.getLayer();
 
-        if (stageInstance && layerInstance) {
+        if (stageInstance && layerInstance && mounted) {
           setStage(stageInstance);
           setLayer(layerInstance);
 
           // Schedule state update after render to avoid cascading renders
           queueMicrotask(() => {
-            setIsCanvasReady(true);
-            toast.success("Canvas sẵn sàng!");
+            if (mounted) {
+              setIsCanvasReady(true);
+              toast.success("Canvas sẵn sàng!");
+            }
           });
         }
       } catch (error) {
         console.error("Init error:", error);
-        toast.error("Không thể khởi tạo canvas");
+        if (mounted) {
+          toast.error("Không thể khởi tạo canvas");
+        }
       }
     };
 
     initCanvas();
 
     // Cleanup on unmount
-    // NOTE: Không destroy stage vì nó có thể được reuse khi component re-render
-    // Chỉ destroy khi thực sự rời khỏi editor page (handled by router)
+    return () => {
+      mounted = false;
+    };
   }, [isCanvasReady, setStage, setLayer]);
 
   // ============================================================================

@@ -1,4 +1,4 @@
--- VibeEdit Initial Database Schema
+-- VibeEditor Initial Database Schema
 -- Run this in Supabase SQL Editor
 
 -- Enable UUID extension

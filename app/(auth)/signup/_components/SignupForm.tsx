@@ -104,7 +104,7 @@ export function SignupForm() {
           <div>
             <CardTitle className="text-2xl">Tạo Tài Khoản</CardTitle>
             <CardDescription>
-              Đăng ký để sử dụng đầy đủ tính năng của VibeEdit
+              Đăng ký để sử dụng đầy đủ tính năng của VibeEditor
             </CardDescription>
           </div>
         </CardHeader>
