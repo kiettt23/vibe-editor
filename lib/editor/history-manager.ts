@@ -1,107 +1,76 @@
-import type * as fabric from "fabric";
-import type { HistoryState } from "@/types/editor";
+import { EditorSnapshot, EditorError } from "@/types/editor";
 
 /**
- * History Manager - Handles undo/redo functionality
+ * HistoryManager - State-based undo/redo
+ *
+ * Best practice từ Konva docs:
+ * - KHÔNG dùng stage.toJSON() (không serialize được images, filters, events)
+ * - Lưu app state (filters, transform) thay vì Konva internals
+ * - Lightweight và fast: chỉ JSON.stringify() simple objects
+ *
+ * Pattern: Store → Snapshot → History Array → Undo/Redo by restoring state
  */
 export class HistoryManager {
-  private canvas: fabric.Canvas;
-  private history: HistoryState[] = [];
+  private history: EditorSnapshot[] = [];
   private currentIndex: number = -1;
   private maxHistory: number = 50;
-  private isUndoRedoing: boolean = false;
-
-  constructor(canvas: fabric.Canvas) {
-    this.canvas = canvas;
-    this.setupEventListeners();
-    this.saveState();
-  }
 
   /**
-   * Setup event listeners for canvas changes
+   * Save snapshot of current editor state
+   * Được gọi sau mỗi action: filter change, transform, crop, etc.
    */
-  private setupEventListeners() {
-    const events = [
-      "object:added",
-      "object:modified",
-      "object:removed",
-      "object:skewing",
-    ] as const;
+  saveSnapshot(snapshot: EditorSnapshot): void {
+    try {
+      // Remove any future states (branching)
+      this.history = this.history.slice(0, this.currentIndex + 1);
 
-    events.forEach((event) => {
-      this.canvas.on(event as any, () => {
-        if (!this.isUndoRedoing) {
-          this.saveState();
-        }
+      // Add new snapshot
+      this.history.push({
+        ...snapshot,
+        timestamp: Date.now(),
       });
-    });
-  }
 
-  /**
-   * Save current canvas state
-   */
-  saveState() {
-    // Remove any states after current index (for branching)
-    this.history = this.history.slice(0, this.currentIndex + 1);
+      this.currentIndex++;
 
-    // Add new state
-    const state: HistoryState = {
-      canvasJSON: JSON.stringify(this.canvas.toJSON()),
-      timestamp: Date.now(),
-    };
-
-    this.history.push(state);
-    this.currentIndex++;
-
-    // Limit history size
-    if (this.history.length > this.maxHistory) {
-      this.history.shift();
-      this.currentIndex--;
+      // Remove oldest if exceeding limit
+      if (this.history.length > this.maxHistory) {
+        this.history.shift();
+        this.currentIndex--;
+      }
+    } catch (error) {
+      throw new EditorError(
+        `Không thể lưu snapshot: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "HISTORY_ERROR"
+      );
     }
   }
 
   /**
-   * Undo last action
+   * Undo to previous state
+   * Returns snapshot để app restore state
    */
-  async undo(): Promise<boolean> {
-    if (!this.canUndo()) return false;
+  undo(): EditorSnapshot | null {
+    if (!this.canUndo()) {
+      return null;
+    }
 
-    this.isUndoRedoing = true;
     this.currentIndex--;
-
-    const state = this.history[this.currentIndex];
-    await this.restoreState(state);
-
-    this.isUndoRedoing = false;
-    return true;
+    return this.history[this.currentIndex];
   }
 
   /**
-   * Redo last undone action
+   * Redo to next state
+   * Returns snapshot để app restore state
    */
-  async redo(): Promise<boolean> {
-    if (!this.canRedo()) return false;
+  redo(): EditorSnapshot | null {
+    if (!this.canRedo()) {
+      return null;
+    }
 
-    this.isUndoRedoing = true;
     this.currentIndex++;
-
-    const state = this.history[this.currentIndex];
-    await this.restoreState(state);
-
-    this.isUndoRedoing = false;
-    return true;
-  }
-
-  /**
-   * Restore canvas state from history
-   */
-  private async restoreState(state: HistoryState): Promise<void> {
-    return new Promise((resolve) => {
-      this.canvas.loadFromJSON(state.canvasJSON, () => {
-        this.canvas.renderAll();
-        resolve();
-      });
-    });
+    return this.history[this.currentIndex];
   }
 
   /**
@@ -119,23 +88,67 @@ export class HistoryManager {
   }
 
   /**
-   * Clear history
+   * Get current snapshot
    */
-  clear() {
-    this.history = [];
-    this.currentIndex = -1;
-    this.saveState();
+  getCurrentSnapshot(): EditorSnapshot | null {
+    if (this.currentIndex >= 0 && this.currentIndex < this.history.length) {
+      return this.history[this.currentIndex];
+    }
+    return null;
   }
 
   /**
-   * Get history info
+   * Clear all history
    */
-  getHistoryInfo() {
+  clear(): void {
+    this.history = [];
+    this.currentIndex = -1;
+  }
+
+  /**
+   * Get history statistics
+   */
+  getStats() {
     return {
-      total: this.history.length,
-      current: this.currentIndex,
+      totalSnapshots: this.history.length,
+      currentIndex: this.currentIndex,
       canUndo: this.canUndo(),
       canRedo: this.canRedo(),
+      memoryUsage: this.estimateMemoryUsage(),
     };
+  }
+
+  /**
+   * Estimate memory usage (KB)
+   */
+  private estimateMemoryUsage(): number {
+    const json = JSON.stringify(this.history);
+    return (json.length * 2) / 1024; // UTF-16 = 2 bytes per char
+  }
+
+  /**
+   * Export history to JSON (for save/load project)
+   */
+  exportHistory(): string {
+    return JSON.stringify({
+      history: this.history,
+      currentIndex: this.currentIndex,
+    });
+  }
+
+  /**
+   * Import history from JSON
+   */
+  importHistory(json: string): void {
+    try {
+      const data = JSON.parse(json);
+      this.history = data.history || [];
+      this.currentIndex = data.currentIndex ?? -1;
+    } catch (error) {
+      throw new EditorError(
+        "Không thể import history: Invalid JSON",
+        "HISTORY_ERROR"
+      );
+    }
   }
 }

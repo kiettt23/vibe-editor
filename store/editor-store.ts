@@ -1,122 +1,146 @@
 import { create } from "zustand";
-import type * as fabric from "fabric";
-import type {
+import Konva from "konva";
+import {
   EditorState,
   EditorTool,
   EditorPanel,
-  FilterConfig,
+  FilterSettings,
+  TransformState,
+  DEFAULT_FILTER_SETTINGS,
+  DEFAULT_TRANSFORM_STATE,
 } from "@/types/editor";
 
+/**
+ * EditorStore - State-based store cho editor
+ *
+ * Best practice từ Konva docs:
+ * - Lưu APP STATE (filters, transform), không lưu Konva nodes
+ * - Konva.Stage và Konva.Image chỉ là view layer, không serialize
+ * - State là single source of truth
+ */
 interface EditorStore extends EditorState {
-  // Canvas
-  setCanvas: (canvas: fabric.Canvas | null) => void;
-  setSelectedObject: (obj: fabric.Object | null) => void;
+  // Image state
+  originalImageSrc: string | null;
+  setOriginalImageSrc: (src: string) => void;
+  setImageLoaded: (loaded: boolean) => void;
 
-  // Zoom & Pan
-  setZoom: (zoom: number) => void;
-  zoomIn: () => void;
-  zoomOut: () => void;
-  resetZoom: () => void;
-  fitToScreen: () => void;
+  // Canvas refs (không serialize)
+  setStage: (stage: Konva.Stage | null) => void;
+  setLayer: (layer: Konva.Layer | null) => void;
+  setImageNode: (imageNode: Konva.Image | null) => void;
 
-  // Canvas Size
-  setCanvasSize: (width: number, height: number) => void;
+  // Filters (app state)
+  currentFilters: FilterSettings;
+  updateFilters: (filters: Partial<FilterSettings>) => void;
+  resetFilters: () => void;
 
-  // Active Tool
+  // Transform (app state)
+  currentTransform: TransformState;
+  updateTransform: (transform: Partial<TransformState>) => void;
+  resetTransform: () => void;
+
+  // UI state
   activeTool: EditorTool;
   setActiveTool: (tool: EditorTool) => void;
-
-  // Active Panel
   activePanel: EditorPanel | null;
   setActivePanel: (panel: EditorPanel | null) => void;
   togglePanel: (panel: EditorPanel) => void;
 
-  // Filters
-  currentFilters: FilterConfig;
-  updateFilters: (filters: Partial<FilterConfig>) => void;
-  resetFilters: () => void;
-
-  // Dirty State
-  setDirty: (isDirty: boolean) => void;
-  setSaving: (isSaving: boolean) => void;
-
-  // History
+  // History state
   canUndo: boolean;
   canRedo: boolean;
   setCanUndo: (canUndo: boolean) => void;
   setCanRedo: (canRedo: boolean) => void;
+
+  // App state
+  isDirty: boolean;
+  setDirty: (isDirty: boolean) => void;
 
   // Reset
   reset: () => void;
 }
 
 const initialState: EditorState = {
-  canvas: null,
-  selectedObject: null,
-  zoom: 1,
-  canvasWidth: 1920,
-  canvasHeight: 1080,
-  isDirty: false,
-  isSaving: false,
+  stage: null,
+  layer: null,
+  imageNode: null,
+  originalImageSrc: null,
+  isImageLoaded: false,
 };
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
   ...initialState,
+
+  // Filters
+  currentFilters: { ...DEFAULT_FILTER_SETTINGS },
+  updateFilters: (filters) => {
+    const { currentFilters } = get();
+    set({
+      currentFilters: { ...currentFilters, ...filters },
+      isDirty: true,
+    });
+  },
+  resetFilters: () =>
+    set({
+      currentFilters: { ...DEFAULT_FILTER_SETTINGS },
+      isDirty: true,
+    }),
+
+  // Transform
+  currentTransform: { ...DEFAULT_TRANSFORM_STATE },
+  updateTransform: (transform) => {
+    const { currentTransform } = get();
+    set({
+      currentTransform: { ...currentTransform, ...transform },
+      isDirty: true,
+    });
+  },
+  resetTransform: () =>
+    set({
+      currentTransform: { ...DEFAULT_TRANSFORM_STATE },
+      isDirty: true,
+    }),
+
+  // Image
+  setOriginalImageSrc: (src) => set({ originalImageSrc: src }),
+  setImageLoaded: (loaded) => set({ isImageLoaded: loaded }),
+
+  // Canvas refs
+  setStage: (stage) => set({ stage }),
+  setLayer: (layer) => set({ layer }),
+  setImageNode: (imageNode) => set({ imageNode }),
+
+  // UI
   activeTool: "select",
-  activePanel: null,
-  currentFilters: {
-    blur: 0,
-    brightness: 0,
-    contrast: 0,
-    saturation: 0,
-    grayscale: false,
-    flipX: false,
-    flipY: false,
-  },
-  canUndo: false,
-  canRedo: false,
-
-  setCanvas: (canvas) => set({ canvas }),
-  setSelectedObject: (obj) => set({ selectedObject: obj }),
-
-  setZoom: (zoom) => set({ zoom: Math.max(0.1, Math.min(5, zoom)) }),
-  zoomIn: () => {
-    const { zoom } = get();
-    set({ zoom: Math.min(5, zoom + 0.1) });
-  },
-  zoomOut: () => {
-    const { zoom } = get();
-    set({ zoom: Math.max(0.1, zoom - 0.1) });
-  },
-  resetZoom: () => set({ zoom: 1 }),
-  fitToScreen: () => {
-    // Will be implemented with canvas reference
-    set({ zoom: 1 });
-  },
-
-  setCanvasSize: (width, height) =>
-    set({ canvasWidth: width, canvasHeight: height }),
-
   setActiveTool: (tool) => set({ activeTool: tool }),
 
+  activePanel: null,
   setActivePanel: (panel) => set({ activePanel: panel }),
   togglePanel: (panel) => {
     const { activePanel } = get();
     set({ activePanel: activePanel === panel ? null : panel });
   },
 
-  updateFilters: (filters) => {
-    const { currentFilters } = get();
-    set({ currentFilters: { ...currentFilters, ...filters }, isDirty: true });
-  },
-  resetFilters: () => set({ currentFilters: {}, isDirty: true }),
-
-  setDirty: (isDirty) => set({ isDirty }),
-  setSaving: (isSaving) => set({ isSaving }),
-
+  // History
+  canUndo: false,
+  canRedo: false,
   setCanUndo: (canUndo) => set({ canUndo }),
   setCanRedo: (canRedo) => set({ canRedo }),
 
+  // App state
+  isDirty: false,
+  setDirty: (isDirty) => set({ isDirty }),
+
+  // Reset
   reset: () =>
-    set({ ...initialState, activeTool: "select", activePanel: null }),
+    set({
+      ...initialState,
+      currentFilters: { ...DEFAULT_FILTER_SETTINGS },
+      currentTransform: { ...DEFAULT_TRANSFORM_STATE },
+      activeTool: "select",
+      activePanel: null,
+      canUndo: false,
+      canRedo: false,
+      isDirty: false,
+    }),
 }));

@@ -1,206 +1,261 @@
-import * as fabric from "fabric";
-import type { FilterConfig } from "@/types/editor";
+import Konva from "konva";
+import { EditorError } from "@/types/editor";
 
+/**
+ * CanvasManager - Quản lý Konva Stage và Image loading
+ *
+ * Best practices từ Konva docs:
+ * - Stage → Layer → Image hierarchy
+ * - Native Image object + Konva.Image wrapper
+ * - Simple async/await pattern cho image loading
+ * - Stage và Layer không được serialize, chỉ image config được lưu
+ */
 export class CanvasManager {
-  private canvas: fabric.Canvas | null = null;
-  private originalImageData: fabric.Image | null = null;
+  private static instance: CanvasManager | null = null;
+  private stage: Konva.Stage | null = null;
+  private layer: Konva.Layer | null = null;
+  private imageNode: Konva.Image | null = null;
+  private imageElement: HTMLImageElement | null = null;
 
-  initialize(
-    canvasElement: HTMLCanvasElement,
-    options?: { width?: number; height?: number }
-  ) {
-    this.canvas = new fabric.Canvas(canvasElement, {
-      width: options?.width || 800,
-      height: options?.height || 600,
-      backgroundColor: "#ffffff",
+  private constructor() {}
+
+  static getInstance(): CanvasManager {
+    if (!CanvasManager.instance) {
+      CanvasManager.instance = new CanvasManager();
+    }
+    return CanvasManager.instance;
+  }
+
+  /**
+   * Initialize Konva Stage và Layer
+   * @param containerId - ID của DOM element container
+   * @param width - Chiều rộng canvas
+   * @param height - Chiều cao canvas
+   */
+  initialize(containerId: string, width: number, height: number): void {
+    // Cleanup existing stage nếu có
+    if (this.stage) {
+      this.stage.destroy();
+    }
+
+    this.stage = new Konva.Stage({
+      container: containerId,
+      width,
+      height,
     });
 
-    return this.canvas;
+    this.layer = new Konva.Layer();
+    this.stage.add(this.layer);
   }
 
-  getCanvas(): fabric.Canvas | null {
-    return this.canvas;
-  }
-
-  async addImage(imageUrl: string): Promise<void> {
-    if (!this.canvas) return;
-
-    const img = await fabric.Image.fromURL(imageUrl);
-
-    // Scale image to fit canvas
-    const canvasWidth = this.canvas.width || 800;
-    const canvasHeight = this.canvas.height || 600;
-    const imgWidth = img.width || 1;
-    const imgHeight = img.height || 1;
-
-    const scale =
-      Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight) * 0.9;
-
-    img.set({
-      scaleX: scale,
-      scaleY: scale,
-      left: (canvasWidth - imgWidth * scale) / 2,
-      top: (canvasHeight - imgHeight * scale) / 2,
-    });
-
-    this.canvas.add(img);
-    this.canvas.setActiveObject(img);
-    this.canvas.renderAll();
-    this.originalImageData = img;
-  }
-
-  addText(text: string, options?: any): void {
-    if (!this.canvas) return;
-
-    const textObj = new fabric.IText(text, {
-      left: 100,
-      top: 100,
-      fontSize: 40,
-      fill: "#000000",
-      ...options,
-    });
-
-    this.canvas.add(textObj);
-    this.canvas.setActiveObject(textObj);
-    this.canvas.renderAll();
-  }
-
-  deleteSelected(): void {
-    if (!this.canvas) return;
-
-    const activeObject = this.canvas.getActiveObject();
-    if (activeObject) {
-      this.canvas.remove(activeObject);
-      this.canvas.renderAll();
-    }
-  }
-
-  applyFilters(filters: FilterConfig): void {
-    if (!this.canvas) return;
-
-    const activeObject = this.canvas.getActiveObject();
-    if (!activeObject || !(activeObject instanceof fabric.Image)) return;
-
-    const filterArray: any[] = [];
-
-    // Blur
-    if (filters.blur && filters.blur > 0) {
-      filterArray.push(new fabric.filters.Blur({ blur: filters.blur / 100 }));
-    }
-
-    // Grayscale
-    if (filters.grayscale) {
-      filterArray.push(new fabric.filters.Grayscale());
-    }
-
-    // Brightness
-    if (filters.brightness && filters.brightness !== 0) {
-      filterArray.push(
-        new fabric.filters.Brightness({ brightness: filters.brightness / 100 })
-      );
-    }
-
-    // Contrast
-    if (filters.contrast && filters.contrast !== 0) {
-      filterArray.push(
-        new fabric.filters.Contrast({ contrast: filters.contrast / 100 })
-      );
-    }
-
-    // Saturation
-    if (filters.saturation && filters.saturation !== 0) {
-      filterArray.push(
-        new fabric.filters.Saturation({ saturation: filters.saturation / 100 })
-      );
-    }
-
-    activeObject.filters = filterArray;
-    activeObject.applyFilters();
-    this.canvas.renderAll();
-  }
-
-  clearFilters(): void {
-    if (!this.canvas) return;
-
-    const activeObject = this.canvas.getActiveObject();
-    if (!activeObject || !(activeObject instanceof fabric.Image)) return;
-
-    activeObject.filters = [];
-    activeObject.applyFilters();
-    this.canvas.renderAll();
-  }
-
-  setZoom(zoomLevel: number): void {
-    if (!this.canvas) return;
-    this.canvas.setZoom(zoomLevel);
-    this.canvas.renderAll();
-  }
-
-  toDataURL(format: "png" | "jpeg" = "png", quality = 1): string {
-    if (!this.canvas) return "";
-    return this.canvas.toDataURL({ format, quality, multiplier: 1 });
-  }
-
-  async toBlob(
-    format: "png" | "jpeg" = "png",
-    quality = 1
-  ): Promise<Blob | null> {
-    if (!this.canvas) return null;
-
-    return new Promise((resolve) => {
-      this.canvas
-        ?.getElement()
-        .toBlob((blob) => resolve(blob), `image/${format}`, quality);
-    });
-  }
-
-  loadFromJSON(json: string): Promise<void> {
+  /**
+   * Load image từ URL hoặc File
+   * Pattern từ Konva docs: native Image + onload callback
+   *
+   * @param source - URL string hoặc File object
+   * @returns Promise resolve khi image đã load xong
+   */
+  async loadImage(source: string | File): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.canvas) {
-        reject(new Error("Canvas not initialized"));
-        return;
-      }
+      const imageObj = new Image();
 
-      this.canvas.loadFromJSON(json, () => {
-        this.canvas?.renderAll();
-        resolve();
-      });
+      imageObj.onload = () => {
+        try {
+          // Cleanup old image nếu có
+          if (this.imageNode) {
+            this.imageNode.destroy();
+          }
+
+          if (!this.layer || !this.stage) {
+            throw new EditorError(
+              "Canvas chưa được khởi tạo",
+              "IMAGE_LOAD_FAILED"
+            );
+          }
+
+          // Tính toán size để fit vào canvas (maintain aspect ratio)
+          const stageWidth = this.stage.width();
+          const stageHeight = this.stage.height();
+          const imageRatio = imageObj.width / imageObj.height;
+          const stageRatio = stageWidth / stageHeight;
+
+          let width = stageWidth;
+          let height = stageHeight;
+
+          if (imageRatio > stageRatio) {
+            // Image rộng hơn canvas
+            height = stageWidth / imageRatio;
+          } else {
+            // Image cao hơn canvas
+            width = stageHeight * imageRatio;
+          }
+
+          // Center image
+          const x = (stageWidth - width) / 2;
+          const y = (stageHeight - height) / 2;
+
+          // Create Konva Image node
+          this.imageNode = new Konva.Image({
+            image: imageObj,
+            x,
+            y,
+            width,
+            height,
+            draggable: false,
+          });
+
+          this.imageElement = imageObj;
+          this.layer.add(this.imageNode);
+          this.layer.draw();
+
+          resolve();
+        } catch (error) {
+          reject(
+            new EditorError(
+              `Không thể render image: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`,
+              "IMAGE_LOAD_FAILED"
+            )
+          );
+        }
+      };
+
+      imageObj.onerror = () => {
+        reject(new EditorError("Không thể load image", "IMAGE_LOAD_FAILED"));
+      };
+
+      // Handle File hoặc URL
+      if (source instanceof File) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imageObj.src = e.target?.result as string;
+        };
+        reader.onerror = () => {
+          reject(new EditorError("Không thể đọc file", "IMAGE_LOAD_FAILED"));
+        };
+        reader.readAsDataURL(source);
+      } else {
+        // CORS handling
+        imageObj.crossOrigin = "anonymous";
+        imageObj.src = source;
+      }
     });
   }
 
-  toJSON(): string {
-    if (!this.canvas) return "{}";
-    return JSON.stringify(this.canvas.toJSON());
+  /**
+   * Get current Konva objects
+   */
+  getStage(): Konva.Stage | null {
+    return this.stage;
   }
 
+  getLayer(): Konva.Layer | null {
+    return this.layer;
+  }
+
+  getImageNode(): Konva.Image | null {
+    return this.imageNode;
+  }
+
+  getImageElement(): HTMLImageElement | null {
+    return this.imageElement;
+  }
+
+  /**
+   * Update image position (for drag/transform)
+   */
+  updateImagePosition(x: number, y: number): void {
+    if (this.imageNode) {
+      this.imageNode.position({ x, y });
+      this.layer?.draw();
+    }
+  }
+
+  /**
+   * Update image scale
+   */
+  updateImageScale(scaleX: number, scaleY: number): void {
+    if (this.imageNode) {
+      this.imageNode.scaleX(scaleX);
+      this.imageNode.scaleY(scaleY);
+      this.layer?.draw();
+    }
+  }
+
+  /**
+   * Update image rotation (degrees)
+   */
+  updateImageRotation(rotation: number): void {
+    if (this.imageNode) {
+      this.imageNode.rotation(rotation);
+      this.layer?.draw();
+    }
+  }
+
+  /**
+   * Flip image horizontal hoặc vertical
+   * Pattern từ Konva docs: dùng negative scale
+   */
+  flipImage(direction: "horizontal" | "vertical"): void {
+    if (!this.imageNode) return;
+
+    if (direction === "horizontal") {
+      this.imageNode.scaleX(this.imageNode.scaleX() * -1);
+    } else {
+      this.imageNode.scaleY(this.imageNode.scaleY() * -1);
+    }
+
+    this.layer?.draw();
+  }
+
+  /**
+   * Enable/disable drag
+   */
+  setDraggable(draggable: boolean): void {
+    if (this.imageNode) {
+      this.imageNode.draggable(draggable);
+    }
+  }
+
+  /**
+   * Clear canvas (remove image)
+   */
   clear(): void {
-    if (!this.canvas) return;
-    this.canvas.clear();
-    this.canvas.backgroundColor = "#ffffff";
-    this.canvas.renderAll();
+    if (this.imageNode) {
+      this.imageNode.destroy();
+      this.imageNode = null;
+    }
+    this.imageElement = null;
+    this.layer?.draw();
   }
 
-  dispose(): void {
-    if (this.canvas) {
-      this.canvas.dispose();
-      this.canvas = null;
+  /**
+   * Resize stage (responsive)
+   */
+  resize(width: number, height: number): void {
+    if (this.stage) {
+      this.stage.width(width);
+      this.stage.height(height);
+      this.layer?.draw();
+    }
+  }
+
+  /**
+   * Cleanup everything
+   */
+  destroy(): void {
+    if (this.stage) {
+      this.stage.destroy();
+      this.stage = null;
+      this.layer = null;
+      this.imageNode = null;
+      this.imageElement = null;
     }
   }
 }
 
-// Singleton instance
-let canvasManagerInstance: CanvasManager | null = null;
-
+// Export singleton getter
 export function getCanvasManager(): CanvasManager {
-  if (!canvasManagerInstance) {
-    canvasManagerInstance = new CanvasManager();
-  }
-  return canvasManagerInstance;
-}
-
-export function resetCanvasManager(): void {
-  if (canvasManagerInstance) {
-    canvasManagerInstance.dispose();
-    canvasManagerInstance = null;
-  }
+  return CanvasManager.getInstance();
 }

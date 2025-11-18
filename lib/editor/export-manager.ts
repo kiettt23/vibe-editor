@@ -1,175 +1,194 @@
-import { saveAs } from "file-saver";
-import type * as fabric from "fabric";
-import type { ExportOptions } from "@/types/editor";
+import Konva from "konva";
+import {
+  ExportOptions,
+  DEFAULT_EXPORT_OPTIONS,
+  EditorError,
+} from "@/types/editor";
 
 /**
- * Export Manager - Handles canvas export functionality
+ * ExportManager - Export Konva canvas to various formats
+ *
+ * Best practices từ Konva docs:
+ * - toBlob() cho async export (recommended)
+ * - toDataURL() cho sync export (fallback)
+ * - pixelRatio = 2 cho high quality export (retina)
+ * - mimeType: 'image/png', 'image/jpeg', 'image/webp'
  */
 export class ExportManager {
-  private canvas: fabric.Canvas;
+  /**
+   * Export stage to Blob
+   * Async method, recommended cho file downloads
+   */
+  static async exportToBlob(
+    stage: Konva.Stage,
+    options: Partial<ExportOptions> = {}
+  ): Promise<Blob> {
+    const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
 
-  constructor(canvas: fabric.Canvas) {
-    this.canvas = canvas;
+    try {
+      const mimeType = this.getMimeType(opts.format);
+
+      const blob = await stage.toBlob({
+        mimeType,
+        quality: opts.quality,
+        pixelRatio: opts.pixelRatio,
+        ...(opts.width && { width: opts.width }),
+        ...(opts.height && { height: opts.height }),
+      });
+
+      if (!blob) {
+        throw new EditorError("toBlob() returned null", "EXPORT_FAILED");
+      }
+
+      return blob as Blob;
+    } catch (error) {
+      throw new EditorError(
+        `Export failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "EXPORT_FAILED"
+      );
+    }
   }
 
   /**
-   * Export canvas as image file
+   * Export stage to Data URL (base64 string)
+   * Sync method, useful cho preview
    */
-  async exportImage(options: ExportOptions, filename?: string): Promise<void> {
-    const {
-      format = "png",
-      quality = 1,
-      width,
-      height,
-      removeWatermark = false,
-    } = options;
+  static exportToDataURL(
+    stage: Konva.Stage,
+    options: Partial<ExportOptions> = {}
+  ): string {
+    const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
 
-    // Calculate multiplier for resolution
-    const multiplier = this.calculateMultiplier(width, height);
+    try {
+      const mimeType = this.getMimeType(opts.format);
 
-    // Add watermark if not Pro tier
-    let watermarkAdded = false;
-    if (!removeWatermark) {
-      watermarkAdded = this.addWatermark();
+      return stage.toDataURL({
+        mimeType,
+        quality: opts.quality,
+        pixelRatio: opts.pixelRatio,
+        ...(opts.width && { width: opts.width }),
+        ...(opts.height && { height: opts.height }),
+      });
+    } catch (error) {
+      throw new EditorError(
+        `Export to DataURL failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "EXPORT_FAILED"
+      );
     }
-
-    // Export canvas
-    const dataURL = this.canvas.toDataURL({
-      format: format === "jpg" ? "jpeg" : format,
-      quality,
-      multiplier,
-    });
-
-    // Remove watermark after export
-    if (watermarkAdded) {
-      this.removeWatermark();
-    }
-
-    // Convert to blob and download
-    const blob = await this.dataURLToBlob(dataURL);
-    const defaultFilename = `vibedit-${Date.now()}.${format}`;
-    saveAs(blob, filename || defaultFilename);
   }
 
   /**
-   * Calculate multiplier based on target dimensions
+   * Export và download file
+   * Tạo blob → create download link → trigger click → cleanup
    */
-  private calculateMultiplier(
-    targetWidth?: number,
-    targetHeight?: number
+  static async downloadImage(
+    stage: Konva.Stage,
+    filename: string,
+    options: Partial<ExportOptions> = {}
+  ): Promise<void> {
+    const blob = await this.exportToBlob(stage, options);
+
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Copy image to clipboard (modern browsers)
+   */
+  static async copyToClipboard(
+    stage: Konva.Stage,
+    options: Partial<ExportOptions> = {}
+  ): Promise<void> {
+    if (!navigator.clipboard || !navigator.clipboard.write) {
+      throw new EditorError(
+        "Clipboard API không được hỗ trợ trên browser này",
+        "EXPORT_FAILED"
+      );
+    }
+
+    try {
+      const blob = await this.exportToBlob(stage, options);
+      const item = new ClipboardItem({ [blob.type]: blob });
+      await navigator.clipboard.write([item]);
+    } catch (error) {
+      throw new EditorError(
+        `Copy to clipboard failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "EXPORT_FAILED"
+      );
+    }
+  }
+
+  /**
+   * Get MIME type from format string
+   */
+  private static getMimeType(format: "png" | "jpeg" | "webp"): string {
+    const mimeTypes = {
+      png: "image/png",
+      jpeg: "image/jpeg",
+      webp: "image/webp",
+    };
+    return mimeTypes[format];
+  }
+
+  /**
+   * Get file extension from format
+   */
+  static getFileExtension(format: "png" | "jpeg" | "webp"): string {
+    return format === "jpeg" ? "jpg" : format;
+  }
+
+  /**
+   * Generate filename with timestamp
+   */
+  static generateFilename(
+    prefix: string = "vibe-editor",
+    format: "png" | "jpeg" | "webp" = "png"
+  ): string {
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .slice(0, -5);
+    const ext = this.getFileExtension(format);
+    return `${prefix}_${timestamp}.${ext}`;
+  }
+
+  /**
+   * Estimate export file size (approximate)
+   * Based on stage dimensions và format
+   */
+  static estimateFileSize(
+    stage: Konva.Stage,
+    options: Partial<ExportOptions> = {}
   ): number {
-    if (!targetWidth && !targetHeight) return 1;
+    const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
+    const width = opts.width || stage.width();
+    const height = opts.height || stage.height();
+    const pixels = width * height * opts.pixelRatio * opts.pixelRatio;
 
-    const canvasWidth = this.canvas.getWidth();
-    const canvasHeight = this.canvas.getHeight();
+    // Rough estimates (bytes per pixel)
+    const bytesPerPixel = {
+      png: 3, // Usually smaller due to compression
+      jpeg: 0.5, // Very compressed
+      webp: 0.3, // Most compressed
+    };
 
-    if (targetWidth && targetHeight) {
-      return Math.min(targetWidth / canvasWidth, targetHeight / canvasHeight);
-    }
-
-    if (targetWidth) {
-      return targetWidth / canvasWidth;
-    }
-
-    if (targetHeight) {
-      return targetHeight / canvasHeight;
-    }
-
-    return 1;
-  }
-
-  /**
-   * Add watermark to canvas (for Free tier)
-   */
-  private addWatermark(): boolean {
-    try {
-      const text = new (window as any).fabric.Text("Made with VibeEdit", {
-        fontSize: 20,
-        fill: "rgba(255, 255, 255, 0.7)",
-        backgroundColor: "rgba(0, 0, 0, 0.3)",
-        padding: 10,
-        selectable: false,
-        evented: false,
-      });
-
-      // Position at bottom-right
-      text.set({
-        left: this.canvas.getWidth() - text.width! - 20,
-        top: this.canvas.getHeight() - text.height! - 20,
-      });
-
-      this.canvas.add(text);
-      this.canvas.renderAll();
-
-      // Store reference for removal
-      (text as any).__isWatermark = true;
-
-      return true;
-    } catch (error) {
-      console.error("Failed to add watermark:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Remove watermark from canvas
-   */
-  private removeWatermark() {
-    const objects = this.canvas.getObjects();
-    const watermark = objects.find((obj: any) => obj.__isWatermark);
-
-    if (watermark) {
-      this.canvas.remove(watermark);
-      this.canvas.renderAll();
-    }
-  }
-
-  /**
-   * Convert data URL to Blob
-   */
-  private async dataURLToBlob(dataURL: string): Promise<Blob> {
-    const response = await fetch(dataURL);
-    return response.blob();
-  }
-
-  /**
-   * Get canvas as data URL (for thumbnails)
-   */
-  getThumbnail(maxWidth: number = 400, maxHeight: number = 400): string {
-    const canvasWidth = this.canvas.getWidth();
-    const canvasHeight = this.canvas.getHeight();
-
-    const multiplier = Math.min(
-      maxWidth / canvasWidth,
-      maxHeight / canvasHeight
-    );
-
-    return this.canvas.toDataURL({
-      format: "png",
-      quality: 0.8,
-      multiplier,
-    });
-  }
-
-  /**
-   * Copy canvas to clipboard (experimental)
-   */
-  async copyToClipboard(): Promise<boolean> {
-    try {
-      const blob = await new Promise<Blob | null>((resolve) => {
-        this.canvas.getElement().toBlob(resolve);
-      });
-
-      if (!blob) return false;
-
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": blob }),
-      ]);
-
-      return true;
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-      return false;
-    }
+    return Math.round(pixels * bytesPerPixel[opts.format]);
   }
 }
