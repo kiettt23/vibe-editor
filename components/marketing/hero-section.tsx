@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { HeroHeader } from "./header";
+import { HeroHeader } from "@/components/shared/header";
 import { Sparkles, Upload, Wand2, Image as ImageIcon } from "lucide-react";
 
 export default function HeroSection() {

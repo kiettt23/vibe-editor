@@ -58,7 +58,7 @@ export default function CardFlip({
                         isFlipped ? "opacity-0" : "opacity-100"
                     )}
                 >
-                    <div className="relative h-full overflow-hidden bg-gradient-to-b from-zinc-100 to-white dark:from-zinc-900 dark:to-black">
+                    <div className="relative h-full overflow-hidden bg-linear-to-b from-zinc-100 to-white dark:from-zinc-900 dark:to-black">
                         <div className="absolute inset-0 flex items-start justify-center pt-24">
                             <div className="relative w-[200px] h-[100px] flex items-center justify-center">
                                 {[...Array(10)].map((_, i) => (
@@ -95,7 +95,7 @@ export default function CardFlip({
                                 <div
                                     className={cn(
                                         "absolute inset-[-8px] rounded-lg transition-opacity duration-300",
-                                        "bg-gradient-to-br from-orange-500/20 via-orange-500/10 to-transparent"
+                                        "bg-linear-to-br from-orange-500/20 via-orange-500/10 to-transparent"
                                     )}
                                 />
                                 <Repeat2 className="relative z-10 w-4 h-4 text-orange-500 transition-transform duration-300 group-hover/icon:scale-110 group-hover/icon:-rotate-12" />
@@ -110,7 +110,7 @@ export default function CardFlip({
                         "absolute inset-0 w-full h-full",
                         "[backface-visibility:hidden] [transform:rotateY(180deg)]",
                         "p-6 rounded-2xl",
-                        "bg-gradient-to-b from-zinc-100 to-white dark:from-zinc-900 dark:to-black",
+                        "bg-linear-to-b from-zinc-100 to-white dark:from-zinc-900 dark:to-black",
                         "border border-zinc-200 dark:border-zinc-800",
                         "shadow-xs dark:shadow-lg",
                         "flex flex-col",
@@ -158,7 +158,7 @@ export default function CardFlip({
                                 "flex items-center justify-between",
                                 "p-3 -m-3 rounded-xl",
                                 "transition-all duration-300",
-                                "bg-gradient-to-r from-zinc-100 via-zinc-100 to-zinc-100",
+                                "bg-linear-to-r from-zinc-100 via-zinc-100 to-zinc-100",
                                 "dark:from-zinc-800 dark:via-zinc-800 dark:to-zinc-800",
                                 "hover:from-orange-500/10 hover:from-0% hover:via-orange-500/5 hover:via-100% hover:to-transparent hover:to-100%",
                                 "dark:hover:from-orange-500/20 dark:hover:from-0% dark:hover:via-orange-500/10 dark:hover:via-100% dark:hover:to-transparent dark:hover:to-100%",
@@ -172,7 +172,7 @@ export default function CardFlip({
                                 <div
                                     className={cn(
                                         "absolute inset-[-6px] rounded-lg transition-all duration-300",
-                                        "bg-gradient-to-br from-orange-500/20 via-orange-500/10 to-transparent",
+                                        "bg-linear-to-br from-orange-500/20 via-orange-500/10 to-transparent",
                                         "opacity-0 group-hover/start:opacity-100 scale-90 group-hover/start:scale-100"
                                     )}
                                 />

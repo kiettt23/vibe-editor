@@ -64,7 +64,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   ...initialState,
   activeTool: "select",
   activePanel: null,
-  currentFilters: {},
+  currentFilters: {
+    blur: 0,
+    brightness: 0,
+    contrast: 0,
+    saturation: 0,
+    grayscale: false,
+    flipX: false,
+    flipY: false,
+  },
   canUndo: false,
   canRedo: false,
 

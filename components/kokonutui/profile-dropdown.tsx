@@ -99,7 +99,7 @@ export default function ProfileDropdown({
                 </div>
               </div>
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5">
                   <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-900">
                     <Image
                       src={data.avatar}
@@ -163,7 +163,7 @@ export default function ProfileDropdown({
                         {item.label}
                       </span>
                     </div>
-                    <div className="flex-shrink-0 ml-auto">
+                    <div className="shrink-0 ml-auto">
                       {item.value && (
                         <span
                           className={cn(
@@ -182,7 +182,7 @@ export default function ProfileDropdown({
               ))}
             </div>
 
-            <DropdownMenuSeparator className="my-3 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-zinc-800" />
+            <DropdownMenuSeparator className="my-3 bg-linear-to-r from-transparent via-zinc-200 to-transparent dark:via-zinc-800" />
 
             <DropdownMenuItem asChild>
               <button

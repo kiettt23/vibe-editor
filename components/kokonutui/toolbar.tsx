@@ -151,7 +151,7 @@ export function Toolbar({
                                 initial="initial"
                                 animate="animate"
                                 exit="exit"
-                                className="absolute -bottom-1 left-1/2 w-full h-[2px] bg-primary origin-left"
+                                className="absolute -bottom-1 left-1/2 w-full h-0.5 bg-primary origin-left"
                             />
                         </motion.div>
                     )}
