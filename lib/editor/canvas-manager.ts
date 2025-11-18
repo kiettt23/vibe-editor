@@ -36,6 +36,17 @@ export class CanvasManager {
     // Cleanup existing stage nếu có
     if (this.stage) {
       this.stage.destroy();
+      this.stage = null;
+      this.layer = null;
+    }
+
+    // Verify container exists
+    const container = document.getElementById(containerId);
+    if (!container) {
+      throw new EditorError(
+        `Container #${containerId} không tồn tại`,
+        "CANVAS_INIT_FAILED"
+      );
     }
 
     this.stage = new Konva.Stage({
@@ -66,9 +77,15 @@ export class CanvasManager {
             this.imageNode.destroy();
           }
 
+          // Defensive check: nếu stage/layer bị null, throw error rõ ràng
           if (!this.layer || !this.stage) {
+            console.error("Canvas state:", {
+              hasStage: !!this.stage,
+              hasLayer: !!this.layer,
+              stageDestroyed: this.stage?._id === undefined,
+            });
             throw new EditorError(
-              "Canvas chưa được khởi tạo",
+              "Canvas đã bị destroy hoặc chưa được khởi tạo. Vui lòng refresh trang.",
               "IMAGE_LOAD_FAILED"
             );
           }

@@ -135,6 +135,7 @@ export class EditorError extends Error {
       | "FILTER_APPLY_FAILED"
       | "EXPORT_FAILED"
       | "HISTORY_ERROR"
+      | "CANVAS_INIT_FAILED"
   ) {
     super(message);
     this.name = "EditorError";

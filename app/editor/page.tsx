@@ -111,10 +111,8 @@ export default function EditorPage() {
     }
 
     // Cleanup on unmount
-    return () => {
-      const canvasManager = getCanvasManager();
-      canvasManager.destroy();
-    };
+    // NOTE: Không destroy stage vì nó có thể được reuse khi component re-render
+    // Chỉ destroy khi thực sự rời khỏi editor page (handled by router)
   }, [
     isInitialized,
     currentFilters,
