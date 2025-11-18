@@ -5,27 +5,63 @@ import {
   EditorError,
 } from "@/types/editor";
 
-/**
- * ExportManager - Export Konva canvas to various formats
- *
- * Best practices từ Konva docs:
- * - toBlob() cho async export (recommended)
- * - toDataURL() cho sync export (fallback)
- * - pixelRatio = 2 cho high quality export (retina)
- * - mimeType: 'image/png', 'image/jpeg', 'image/webp'
- */
 export class ExportManager {
   /**
-   * Export stage to Blob
-   * Async method, recommended cho file downloads
+   * Add watermark to stage for free tier users
    */
+  static addWatermark(stage: Konva.Stage): Konva.Text {
+    const layer = stage.getLayers()[0];
+    if (!layer) {
+      throw new EditorError("No layer found in stage", "EXPORT_FAILED");
+    }
+
+    const watermark = new Konva.Text({
+      text: "Created with VibeEdit",
+      fontSize: Math.max(stage.width() * 0.02, 16), // Responsive size
+      fontFamily: "Inter, sans-serif",
+      fill: "#ffffff",
+      opacity: 0.5,
+      shadowColor: "#000000",
+      shadowBlur: 4,
+      shadowOpacity: 0.8,
+      shadowOffset: { x: 1, y: 1 },
+    });
+
+    // Position at bottom-right with padding
+    const padding = Math.max(stage.width() * 0.02, 20);
+    watermark.position({
+      x: stage.width() - watermark.width() - padding,
+      y: stage.height() - watermark.height() - padding,
+    });
+
+    layer.add(watermark);
+    layer.draw();
+
+    return watermark;
+  }
+
+  /**
+   * Remove watermark from stage
+   */
+  static removeWatermark(watermark: Konva.Text): void {
+    watermark.destroy();
+    watermark.getLayer()?.draw();
+  }
+
   static async exportToBlob(
     stage: Konva.Stage,
-    options: Partial<ExportOptions> = {}
+    options: Partial<ExportOptions> = {},
+    addWatermark: boolean = false
   ): Promise<Blob> {
     const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
+    let watermark: Konva.Text | null = null;
 
     try {
+      // Add watermark if needed
+      if (addWatermark) {
+        watermark = this.addWatermark(stage);
+      }
+
       const mimeType = this.getMimeType(opts.format);
 
       const blob = await stage.toBlob({
@@ -48,20 +84,28 @@ export class ExportManager {
         }`,
         "EXPORT_FAILED"
       );
+    } finally {
+      // Always remove watermark after export
+      if (watermark) {
+        this.removeWatermark(watermark);
+      }
     }
   }
 
-  /**
-   * Export stage to Data URL (base64 string)
-   * Sync method, useful cho preview
-   */
   static exportToDataURL(
     stage: Konva.Stage,
-    options: Partial<ExportOptions> = {}
+    options: Partial<ExportOptions> = {},
+    addWatermark: boolean = false
   ): string {
     const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
+    let watermark: Konva.Text | null = null;
 
     try {
+      // Add watermark if needed
+      if (addWatermark) {
+        watermark = this.addWatermark(stage);
+      }
+
       const mimeType = this.getMimeType(opts.format);
 
       return stage.toDataURL({
@@ -78,41 +122,35 @@ export class ExportManager {
         }`,
         "EXPORT_FAILED"
       );
+    } finally {
+      // Always remove watermark after export
+      if (watermark) {
+        this.removeWatermark(watermark);
+      }
     }
   }
 
-  /**
-   * Export và download file
-   * Tạo blob → create download link → trigger click → cleanup
-   */
   static async downloadImage(
     stage: Konva.Stage,
     filename: string,
-    options: Partial<ExportOptions> = {}
+    options: Partial<ExportOptions> = {},
+    addWatermark: boolean = false
   ): Promise<void> {
-    const blob = await this.exportToBlob(stage, options);
-
-    // Create download link
+    const blob = await this.exportToBlob(stage, options, addWatermark);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
-
-    // Trigger download
     document.body.appendChild(link);
     link.click();
-
-    // Cleanup
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
 
-  /**
-   * Copy image to clipboard (modern browsers)
-   */
   static async copyToClipboard(
     stage: Konva.Stage,
-    options: Partial<ExportOptions> = {}
+    options: Partial<ExportOptions> = {},
+    addWatermark: boolean = false
   ): Promise<void> {
     if (!navigator.clipboard || !navigator.clipboard.write) {
       throw new EditorError(
@@ -122,7 +160,7 @@ export class ExportManager {
     }
 
     try {
-      const blob = await this.exportToBlob(stage, options);
+      const blob = await this.exportToBlob(stage, options, addWatermark);
       const item = new ClipboardItem({ [blob.type]: blob });
       await navigator.clipboard.write([item]);
     } catch (error) {
@@ -135,9 +173,6 @@ export class ExportManager {
     }
   }
 
-  /**
-   * Get MIME type from format string
-   */
   private static getMimeType(format: "png" | "jpeg" | "webp"): string {
     const mimeTypes = {
       png: "image/png",
@@ -147,16 +182,10 @@ export class ExportManager {
     return mimeTypes[format];
   }
 
-  /**
-   * Get file extension from format
-   */
   static getFileExtension(format: "png" | "jpeg" | "webp"): string {
     return format === "jpeg" ? "jpg" : format;
   }
 
-  /**
-   * Generate filename with timestamp
-   */
   static generateFilename(
     prefix: string = "vibe-editor",
     format: "png" | "jpeg" | "webp" = "png"
@@ -169,10 +198,6 @@ export class ExportManager {
     return `${prefix}_${timestamp}.${ext}`;
   }
 
-  /**
-   * Estimate export file size (approximate)
-   * Based on stage dimensions và format
-   */
   static estimateFileSize(
     stage: Konva.Stage,
     options: Partial<ExportOptions> = {}
@@ -181,12 +206,10 @@ export class ExportManager {
     const width = opts.width || stage.width();
     const height = opts.height || stage.height();
     const pixels = width * height * opts.pixelRatio * opts.pixelRatio;
-
-    // Rough estimates (bytes per pixel)
     const bytesPerPixel = {
-      png: 3, // Usually smaller due to compression
-      jpeg: 0.5, // Very compressed
-      webp: 0.3, // Most compressed
+      png: 3,
+      jpeg: 0.5,
+      webp: 0.3,
     };
 
     return Math.round(pixels * bytesPerPixel[opts.format]);

@@ -4,10 +4,6 @@ import {
   DEFAULT_FILTER_SETTINGS,
 } from "@/types/editor";
 
-/**
- * Predefined filter presets
- * Instagram-style filters cho quick apply
- */
 export const FILTER_PRESETS: FilterPreset[] = [
   {
     name: "Original",
@@ -104,16 +100,10 @@ export const FILTER_PRESETS: FilterPreset[] = [
   },
 ];
 
-/**
- * Get preset by name
- */
 export function getPresetByName(name: string): FilterPreset | undefined {
   return FILTER_PRESETS.find((preset) => preset.name === name);
 }
 
-/**
- * Get all preset names
- */
 export function getPresetNames(): string[] {
   return FILTER_PRESETS.map((preset) => preset.name);
 }

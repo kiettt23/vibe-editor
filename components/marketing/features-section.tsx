@@ -8,36 +8,38 @@ const features = [
   {
     icon: Upload,
     title: "Drag & Drop Upload",
-    description: "Chỉ cần kéo thả ảnh vào trình duyệt. Hỗ trợ JPG, PNG, WebP.",
+    description:
+      "Chỉ cần kéo thả ảnh vào trình duyệt. Hỗ trợ JPG, PNG, WebP. Tải lên nhanh chóng và bảo mật.",
   },
   {
     icon: Sparkles,
     title: "Professional Filters",
     description:
-      "Áp dụng filters chuyên nghiệp trong 1 click. Blur, Brightness, Contrast và nhiều hơn nữa.",
+      "Hơn 10 filters chuyên nghiệp sẵn có. Từ Vintage, Vibrant đến Black & White. Áp dụng ngay lập tức.",
   },
   {
     icon: Wand2,
-    title: "AI Background Removal",
+    title: "Real-time Editing",
     description:
-      "Xóa phông nền tự động với AI. Chính xác và nhanh chóng chỉ trong vài giây.",
+      "Chỉnh sửa Brightness, Contrast, Saturation, Hue theo thời gian thực. Xem ngay kết quả trước mắt.",
   },
   {
     icon: Layers,
-    title: "Layer System",
+    title: "Transform Tools",
     description:
-      "Quản lý nhiều layers như Photoshop. Thêm, xóa, reorder dễ dàng.",
+      "Lật ngang, lật dọc, xoay ảnh dễ dàng. Tất cả đều có keyboard shortcuts tiện lợi.",
   },
   {
     icon: Type,
-    title: "Text Tool",
+    title: "Auto-Save Projects",
     description:
-      "Thêm text với custom fonts, màu sắc, và effects chuyên nghiệp.",
+      "Không lo mất dữ liệu. Tự động lưu sau 3 giây. Tiếp tục chỉnh sửa bất cứ lúc nào.",
   },
   {
     icon: Download,
-    title: "Export Anywhere",
-    description: "Tải về PNG hoặc JPG với resolution tùy chọn. Từ HD đến 4K.",
+    title: "High-Quality Export",
+    description:
+      "Export PNG, JPEG, WebP với chất lượng cao. Hỗ trợ Retina display (2x resolution).",
   },
 ];
 

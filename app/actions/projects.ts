@@ -1,13 +1,20 @@
-// @ts-nocheck - Supabase type inference issues with Database types
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { Project } from "@/types/project";
+import type {
+  Project,
+  ProjectInsert,
+  ProjectUpdate,
+  CanvasState,
+} from "@/types/project";
+import type { Json } from "@/lib/supabase/types";
+import { logError } from "@/lib/error-handler";
+import { ERROR_MESSAGES, SUBSCRIPTION } from "@/lib/constants";
 
 export async function createProject(data: {
   name: string;
-  canvas_data: any;
+  canvas_data: Json;
   width?: number;
   height?: number;
   thumbnail_url?: string;
@@ -18,10 +25,10 @@ export async function createProject(data: {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
-  const insertData = {
+  const insertData: ProjectInsert = {
     user_id: user.id,
     name: data.name,
     canvas_data: data.canvas_data,
@@ -30,15 +37,18 @@ export async function createProject(data: {
     thumbnail_url: data.thumbnail_url || null,
   };
 
-  const { data: project, error } = await (supabase
+  // NOTE: Supabase type inference issue - generated types don't match client API
+  // This is a known limitation with Supabase v2 typed clients
+  const { data: project, error } = await supabase
     .from("projects")
-    .insert(insertData as any)
+    // @ts-expect-error - Supabase v2 Insert type inference limitation
+    .insert(insertData)
     .select()
-    .single() as any);
+    .single();
 
   if (error) {
-    console.error("Error creating project:", error);
-    throw new Error("Failed to create project");
+    logError(error, "createProject");
+    throw new Error(ERROR_MESSAGES.PROJECT_CREATE_FAILED);
   }
 
   revalidatePath("/dashboard");
@@ -49,7 +59,7 @@ export async function updateProject(
   projectId: string,
   data: {
     name?: string;
-    canvas_data?: any;
+    canvas_data?: Json;
     width?: number;
     height?: number;
     thumbnail_url?: string;
@@ -61,17 +71,19 @@ export async function updateProject(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
-  const updateData: any = {
+  const updateData: ProjectUpdate = {
     ...data,
     updated_at: new Date().toISOString(),
   };
 
-  // @ts-ignore - Supabase type inference issue
+  // NOTE: Supabase type inference issue - generated types don't match client API
+  // Using 'as any' due to Supabase v2 typed client limitation with Insert/Update types
   const { data: project, error } = await supabase
     .from("projects")
+    // @ts-expect-error - Supabase v2 Update type inference limitation
     .update(updateData)
     .eq("id", projectId)
     .eq("user_id", user.id)
@@ -79,8 +91,8 @@ export async function updateProject(
     .single();
 
   if (error) {
-    console.error("Error updating project:", error);
-    throw new Error("Failed to update project");
+    logError(error, "updateProject");
+    throw new Error(ERROR_MESSAGES.PROJECT_UPDATE_FAILED);
   }
 
   revalidatePath("/dashboard");
@@ -95,7 +107,7 @@ export async function getProject(projectId: string): Promise<Project | null> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
   const { data: project, error } = await supabase
@@ -106,7 +118,7 @@ export async function getProject(projectId: string): Promise<Project | null> {
     .single();
 
   if (error) {
-    console.error("Error fetching project:", error);
+    logError(error, "getProject");
     return null;
   }
 
@@ -120,7 +132,7 @@ export async function getAllProjects(): Promise<Project[]> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
   const { data: projects, error } = await supabase
@@ -130,7 +142,7 @@ export async function getAllProjects(): Promise<Project[]> {
     .order("updated_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching projects:", error);
+    logError(error, "getAllProjects");
     return [];
   }
 
@@ -144,7 +156,7 @@ export async function deleteProject(projectId: string) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
   const { error } = await supabase
@@ -154,8 +166,8 @@ export async function deleteProject(projectId: string) {
     .eq("user_id", user.id);
 
   if (error) {
-    console.error("Error deleting project:", error);
-    throw new Error("Failed to delete project");
+    logError(error, "deleteProject");
+    throw new Error(ERROR_MESSAGES.PROJECT_DELETE_FAILED);
   }
 
   revalidatePath("/dashboard");
@@ -172,20 +184,22 @@ export async function checkProjectLimit(): Promise<{
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
-  // Get user profile to check subscription
-  const { data: profile } = await (supabase
+  const { data: profile } = await supabase
     .from("user_profiles")
     .select("subscription")
     .eq("id", user.id)
-    .single() as any);
+    .single();
 
-  const isPro = (profile as any)?.subscription === "pro";
-  const maxProjects = isPro ? Infinity : 5;
+  // NOTE: Supabase type inference limitation - profile type is inferred as never
+  const isPro =
+    (profile as { subscription?: string } | null)?.subscription === "pro";
+  const maxProjects = isPro
+    ? SUBSCRIPTION.PRO_PROJECT_LIMIT
+    : SUBSCRIPTION.FREE_PROJECT_LIMIT;
 
-  // Count current projects
   const { count } = await supabase
     .from("projects")
     .select("*", { count: "exact", head: true })
@@ -197,6 +211,150 @@ export async function checkProjectLimit(): Promise<{
   return {
     canCreate,
     currentCount,
-    maxProjects: isPro ? 999 : maxProjects,
+    maxProjects,
   };
+}
+
+// ============================================================================
+// CANVAS SAVE/LOAD ACTIONS
+// ============================================================================
+
+/**
+ * Save canvas state to project
+ * Updates canvas_data JSON and optionally thumbnail
+ */
+export async function saveProjectCanvas(
+  projectId: string,
+  canvasData: Omit<CanvasState, "version">
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
+  }
+
+  // Validate canvas data
+  if (!canvasData.imageUrl) {
+    throw new Error("Image URL is required");
+  }
+
+  // Prepare canvas state with version
+  const canvasState = {
+    ...canvasData,
+    version: "1.0",
+  };
+
+  // Update project with new canvas data
+  // NOTE: Supabase type inference issue with JSON fields
+  const { data: project, error } = await supabase
+    .from("projects")
+    // @ts-expect-error - Supabase v2 JSON field type inference limitation
+    .update({
+      canvas_data: canvasState,
+      width: canvasData.width,
+      height: canvasData.height,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", projectId)
+    .eq("user_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    logError(error, "saveProjectCanvas");
+    throw new Error("Không thể lưu project");
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/editor/${projectId}`);
+
+  return project;
+}
+
+/**
+ * Upload project thumbnail
+ * Separate action for thumbnail upload (after generating from canvas)
+ */
+export async function uploadProjectThumbnail(
+  projectId: string,
+  thumbnailBlob: Blob
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
+  }
+
+  // Generate unique filename
+  const fileName = `${projectId}-${Date.now()}.png`;
+  const filePath = `thumbnails/${user.id}/${fileName}`;
+
+  // Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from("project-thumbnails")
+    .upload(filePath, thumbnailBlob, {
+      contentType: "image/png",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    logError(uploadError, "uploadProjectThumbnail");
+    throw new Error("Không thể upload thumbnail");
+  }
+
+  // Get public URL
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("project-thumbnails").getPublicUrl(filePath);
+
+  // Update project with thumbnail URL
+  const { error: updateError } = await supabase
+    .from("projects")
+    // @ts-expect-error - Supabase v2 Update type inference limitation
+    .update({ thumbnail_url: publicUrl })
+    .eq("id", projectId)
+    .eq("user_id", user.id);
+
+  if (updateError) {
+    logError(updateError, "uploadProjectThumbnail - update");
+    throw new Error("Không thể cập nhật thumbnail");
+  }
+
+  revalidatePath("/dashboard");
+  return publicUrl;
+}
+
+// ============================================================================
+// USER SUBSCRIPTION
+// ============================================================================
+
+/**
+ * Get user subscription tier for features like watermark
+ */
+export async function getUserSubscription(): Promise<"free" | "pro"> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return "free";
+  }
+
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("subscription")
+    .eq("id", user.id)
+    .single();
+
+  const isPro =
+    (profile as { subscription?: string } | null)?.subscription === "pro";
+
+  return isPro ? "pro" : "free";
 }

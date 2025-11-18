@@ -20,13 +20,14 @@ const plans = [
     price: "0đ",
     description: "Hoàn hảo để dùng thử VibeEdit",
     features: [
-      "Chỉnh sửa cơ bản không giới hạn",
+      "Upload ảnh không giới hạn",
       "Lưu tối đa 5 dự án",
-      "Tất cả bộ lọc cơ bản",
-      "10 bộ lọc preset Instagram",
-      "Export PNG/JPG (tối đa 2048x2048)",
-      "Xóa phông AI (5 lần/tháng)",
-      "Có watermark khi export",
+      "Tất cả filters cơ bản (10+ filters)",
+      "Hơn 8 preset filters chuyên nghiệp",
+      "Real-time adjustments (Brightness, Contrast, Saturation)",
+      "Transform tools (Flip, Rotate)",
+      "Export PNG/JPEG/WebP (2x resolution)",
+      "Có watermark nhỏ khi export",
     ],
     cta: "Bắt đầu ngay",
     href: "/editor",
@@ -40,12 +41,13 @@ const plans = [
     features: [
       "Tất cả tính năng Miễn phí",
       "Dự án không giới hạn",
-      "Không có watermark",
-      "Export 4K (tối đa 4096x4096)",
-      "Xóa phông AI (100 lần/tháng)",
-      "Hỗ trợ ưu tiên",
-      "Truy cập sớm tính năng mới",
-      "Tùy chỉnh thương hiệu",
+      "Không có watermark khi export",
+      "Auto-save mọi thao tác",
+      "Thumbnail tự động cho mỗi project",
+      "Keyboard shortcuts (Ctrl+S, Ctrl+E, Ctrl+R)",
+      "Version history đầy đủ",
+      "Hỗ trợ ưu tiên qua email",
+      "Truy cập sớm tính năng mới (AI tools)",
     ],
     cta: "Nâng cấp Pro",
     href: "/signup",
@@ -122,6 +124,99 @@ export default function PricingPage() {
               </CardFooter>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* Comparison Table */}
+      <section className="container mx-auto px-4 pb-20">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-8 text-center text-3xl font-bold">
+            So sánh chi tiết
+          </h2>
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="p-4 text-left font-semibold">Tính năng</th>
+                      <th className="p-4 text-center font-semibold">
+                        Miễn phí
+                      </th>
+                      <th className="p-4 text-center font-semibold bg-primary/5">
+                        Pro
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="p-4 text-sm">Số lượng dự án</td>
+                      <td className="p-4 text-center text-sm text-muted-foreground">
+                        5 dự án
+                      </td>
+                      <td className="p-4 text-center text-sm bg-primary/5">
+                        Không giới hạn
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-4 text-sm">Filters & Presets</td>
+                      <td className="p-4 text-center">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                      <td className="p-4 text-center bg-primary/5">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-4 text-sm">Watermark</td>
+                      <td className="p-4 text-center text-sm text-muted-foreground">
+                        Có
+                      </td>
+                      <td className="p-4 text-center text-sm bg-primary/5 font-semibold">
+                        Không
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-4 text-sm">Auto-save</td>
+                      <td className="p-4 text-center text-sm text-muted-foreground">
+                        ✕
+                      </td>
+                      <td className="p-4 text-center bg-primary/5">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-4 text-sm">Keyboard Shortcuts</td>
+                      <td className="p-4 text-center text-sm text-muted-foreground">
+                        ✕
+                      </td>
+                      <td className="p-4 text-center bg-primary/5">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-4 text-sm">Version History</td>
+                      <td className="p-4 text-center text-sm text-muted-foreground">
+                        ✕
+                      </td>
+                      <td className="p-4 text-center bg-primary/5">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-4 text-sm">Hỗ trợ ưu tiên</td>
+                      <td className="p-4 text-center text-sm text-muted-foreground">
+                        ✕
+                      </td>
+                      <td className="p-4 text-center bg-primary/5">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
