@@ -42,6 +42,10 @@ interface EditorStore extends EditorState {
   isDirty: boolean;
   setDirty: (isDirty: boolean) => void;
 
+  // Zoom control
+  zoom: number;
+  setZoom: (zoom: number) => void;
+
   reset: () => void;
 }
 
@@ -106,6 +110,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   isDirty: false,
   setDirty: (isDirty) => set({ isDirty }),
 
+  // Zoom control
+  zoom: 1,
+  setZoom: (zoom) => set({ zoom: Math.max(0.1, Math.min(3, zoom)) }),
+
   reset: () =>
     set({
       ...initialState,
@@ -114,5 +122,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       activeTool: "select",
       activePanel: null,
       isDirty: false,
+      zoom: 1,
     }),
 }));
