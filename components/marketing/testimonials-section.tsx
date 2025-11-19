@@ -32,45 +32,49 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <section className="py-24 bg-background">
+    <section className="py-20 bg-background">
       <div className="container mx-auto px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">
             Người dùng nói gì về VibeEditor
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Hàng nghìn người đã tin dùng VibeEditor cho công việc hàng ngày
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {testimonials.map((testimonial, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <Avatar>
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="w-10 h-10">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
                       {testimonial.avatar}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h4 className="font-semibold">{testimonial.name}</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className="font-semibold text-sm">
+                      {testimonial.name}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
                       {testimonial.role}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
                     <Star
                       key={i}
-                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                      className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"
                     />
                   ))}
                 </div>
 
-                <p className="text-muted-foreground">{testimonial.content}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {testimonial.content}
+                </p>
               </CardContent>
             </Card>
           ))}

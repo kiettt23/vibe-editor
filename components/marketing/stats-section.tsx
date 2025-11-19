@@ -26,20 +26,18 @@ const stats = [
 
 export default function StatsSection() {
   return (
-    <section className="py-16 bg-primary text-primary-foreground">
+    <section className="py-14 bg-primary text-primary-foreground">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
-              <div className="flex justify-center mb-3">
-                <stat.icon className="w-8 h-8 opacity-90" />
+              <div className="flex justify-center mb-2.5">
+                <stat.icon className="w-7 h-7 opacity-90" />
               </div>
-              <div className="text-3xl md:text-4xl font-bold mb-2">
+              <div className="text-2xl md:text-3xl font-bold mb-1.5">
                 {stat.value}
               </div>
-              <div className="text-sm md:text-base opacity-90">
-                {stat.label}
-              </div>
+              <div className="text-xs md:text-sm opacity-90">{stat.label}</div>
             </div>
           ))}
         </div>

@@ -45,41 +45,43 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">
             Mọi thứ bạn cần để chỉnh sửa ảnh
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Công cụ chỉnh sửa ảnh online mạnh mẽ, dễ sử dụng, và hoàn toàn miễn
             phí
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {features.map((feature, index) => (
             <Card
               key={index}
-              className="p-6 hover:shadow-lg transition-shadow duration-300"
+              className="p-5 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <feature.icon className="w-6 h-6 text-primary" />
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
+                  <feature.icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">
+                  <h3 className="font-semibold text-base mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
               </div>
             </Card>
           ))}
         </div>
 
-        <div className="mt-16 text-center">
-          <Button asChild size="lg">
+        <div className="mt-12 text-center">
+          <Button asChild size="default" className="h-10 px-6">
             <Link href="/editor">Bắt đầu miễn phí →</Link>
           </Button>
         </div>

@@ -523,40 +523,54 @@ export function EditorWorkspace({
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      {/* Header */}
-      <div className="flex h-14 items-center justify-between border-b px-4">
+      {/* Header - Compact & Modern */}
+      <div className="flex h-12 items-center justify-between border-b px-4 bg-card/50 backdrop-blur-sm">
+        {/* Left: Logo + Status */}
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold">Vibe Editor</h1>
-          {isImageLoaded && (
-            <span className="text-sm font-medium text-green-600 dark:text-green-400">
-              ✓ Đã tải ảnh
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-linear-to-br from-primary to-accent flex items-center justify-center">
+              <span className="text-white text-xs font-bold">VE</span>
+            </div>
+            <span className="text-sm font-semibold text-foreground/90">
+              VibeEditor
             </span>
+          </div>
+
+          {isImageLoaded && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              <span className="text-xs font-medium text-green-700 dark:text-green-400">
+                Đã tải ảnh
+              </span>
+            </div>
           )}
+
           {lastSaved && (
             <span className="text-xs text-muted-foreground">
-              Đã lưu {lastSaved.toLocaleTimeString()}
+              Lưu lúc {lastSaved.toLocaleTimeString()}
             </span>
           )}
         </div>
 
-        {/* Toolbar */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-2">
           {projectId && (
             <Button
-              variant="secondary"
+              variant="ghost"
               size="sm"
               onClick={handleSave}
               disabled={!isImageLoaded || isSaving}
+              className="h-8 px-3"
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang lưu...
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  <span className="text-xs">Đang lưu...</span>
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Lưu
+                  <Save className="mr-1.5 h-3.5 w-3.5" />
+                  <span className="text-xs">Lưu</span>
                 </>
               )}
             </Button>
@@ -567,9 +581,10 @@ export function EditorWorkspace({
             size="sm"
             onClick={() => handleExport("png")}
             disabled={!isImageLoaded}
+            className="h-8 px-3"
           >
-            <Download className="mr-2 h-4 w-4" />
-            Export PNG
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            <span className="text-xs">PNG</span>
           </Button>
 
           <Button
@@ -577,50 +592,58 @@ export function EditorWorkspace({
             size="sm"
             onClick={() => handleExport("jpeg")}
             disabled={!isImageLoaded}
+            className="h-8 px-3"
           >
-            Export JPG
+            <span className="text-xs">JPG</span>
           </Button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Upload */}
-        <div className="w-64 border-r bg-muted/10">
+        {/* Left Sidebar - Upload Panel */}
+        <div className="w-72 border-r bg-muted/5">
           <div className="flex h-full flex-col">
-            <div className="border-b p-4">
-              <h2 className="font-semibold">Tải ảnh lên</h2>
+            <div className="border-b px-5 py-3.5">
+              <h2 className="text-sm font-semibold text-foreground/90">
+                Tải ảnh lên
+              </h2>
             </div>
 
             <ScrollArea className="flex-1">
-              <div className="p-4">
+              <div className="p-5 space-y-4">
                 <div
                   {...getRootProps()}
                   className={cn(
-                    "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
+                    "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200",
                     isDragActive
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25 hover:border-primary/50",
+                      ? "border-primary bg-primary/5 scale-[1.02]"
+                      : "border-border hover:border-primary/60 hover:bg-primary/5",
                     !isCanvasReady && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   <input {...getInputProps()} />
-                  <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-sm font-medium mb-2">
-                    {isDragActive
-                      ? "Thả ảnh vào đây"
-                      : "Click hoặc kéo ảnh vào"}
+                  <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Upload className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium mb-1.5 text-foreground">
+                    {isDragActive ? "Thả ảnh vào đây" : "Kéo thả hoặc click"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    PNG, JPG, WEBP (tối đa 10MB)
+                    PNG, JPG, WEBP • Tối đa 10MB
                   </p>
                 </div>
 
                 {isImageLoaded && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium">Đã tải ảnh</p>
-                    <p className="text-xs text-muted-foreground">
-                      Sử dụng các controls bên phải để chỉnh sửa
+                  <div className="p-4 rounded-lg bg-accent/10 border border-accent/20 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-accent" />
+                      <p className="text-xs font-semibold text-foreground">
+                        Ảnh đã tải
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Sử dụng panel bên phải để điều chỉnh filters và effects
                     </p>
                   </div>
                 )}
@@ -631,36 +654,62 @@ export function EditorWorkspace({
 
         {/* Canvas Area */}
         <div
-          className="flex-1 bg-muted/5 overflow-auto"
+          className="flex-1 bg-linear-to-br from-background via-muted/5 to-background overflow-auto relative"
           ref={canvasContainerRef}
         >
+          {!isImageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center space-y-3 px-6">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Upload className="h-8 w-8 text-primary/60" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Tải ảnh lên để bắt đầu chỉnh sửa
+                </p>
+              </div>
+            </div>
+          )}
           <div
             id="konva-container"
             className="w-full h-full flex items-center justify-center"
           />
         </div>
 
-        {/* Right Sidebar - Filters */}
-        <div className="w-64 border-l bg-muted/10">
+        {/* Right Sidebar - Adjustments */}
+        <div className="w-72 border-l bg-muted/5">
           <div className="flex h-full flex-col">
-            <div className="border-b p-4">
-              <h2 className="font-semibold">Filters & Chỉnh sửa</h2>
+            <div className="border-b px-5 py-3.5">
+              <h2 className="text-sm font-semibold text-foreground/90">
+                Điều chỉnh & Filters
+              </h2>
             </div>
 
             <ScrollArea className="flex-1">
               <Tabs defaultValue="adjustments" className="w-full">
-                <TabsList className="w-full grid grid-cols-2">
-                  <TabsTrigger value="adjustments">Chỉnh sửa</TabsTrigger>
-                  <TabsTrigger value="presets">Presets</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-2 mx-5 my-3">
+                  <TabsTrigger value="adjustments" className="text-xs">
+                    Tùy chỉnh
+                  </TabsTrigger>
+                  <TabsTrigger value="presets" className="text-xs">
+                    Presets
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* Adjustments Tab */}
-                <TabsContent value="adjustments" className="p-4 space-y-4">
+                <TabsContent
+                  value="adjustments"
+                  className="px-5 py-4 space-y-5"
+                >
                   {/* Blur */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="blur">Làm mờ</Label>
-                      <span className="text-xs text-muted-foreground">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor="blur"
+                        className="text-xs font-medium text-foreground/80"
+                      >
+                        Làm mờ
+                      </Label>
+                      <span className="text-xs font-semibold text-primary tabular-nums">
                         {currentFilters.blur}
                       </span>
                     </div>
@@ -678,10 +727,15 @@ export function EditorWorkspace({
                   </div>
 
                   {/* Brightness */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="brightness">Độ sáng</Label>
-                      <span className="text-xs text-muted-foreground">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor="brightness"
+                        className="text-xs font-medium text-foreground/80"
+                      >
+                        Độ sáng
+                      </Label>
+                      <span className="text-xs font-semibold text-primary tabular-nums">
                         {currentFilters.brightness > 0 ? "+" : ""}
                         {currentFilters.brightness.toFixed(2)}
                       </span>
@@ -700,10 +754,15 @@ export function EditorWorkspace({
                   </div>
 
                   {/* Contrast */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="contrast">Độ tương phản</Label>
-                      <span className="text-xs text-muted-foreground">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor="contrast"
+                        className="text-xs font-medium text-foreground/80"
+                      >
+                        Độ tương phản
+                      </Label>
+                      <span className="text-xs font-semibold text-primary tabular-nums">
                         {currentFilters.contrast}
                       </span>
                     </div>
@@ -721,10 +780,15 @@ export function EditorWorkspace({
                   </div>
 
                   {/* Saturation */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="saturation">Độ bão hòa</Label>
-                      <span className="text-xs text-muted-foreground">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor="saturation"
+                        className="text-xs font-medium text-foreground/80"
+                      >
+                        Độ bão hòa
+                      </Label>
+                      <span className="text-xs font-semibold text-primary tabular-nums">
                         {currentFilters.saturation > 0 ? "+" : ""}
                         {currentFilters.saturation.toFixed(2)}
                       </span>
@@ -743,10 +807,15 @@ export function EditorWorkspace({
                   </div>
 
                   {/* Hue */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="hue">Sắc độ</Label>
-                      <span className="text-xs text-muted-foreground">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor="hue"
+                        className="text-xs font-medium text-foreground/80"
+                      >
+                        Sắc độ
+                      </Label>
+                      <span className="text-xs font-semibold text-primary tabular-nums">
                         {currentFilters.hue}°
                       </span>
                     </div>
@@ -763,58 +832,82 @@ export function EditorWorkspace({
                     />
                   </div>
 
-                  <Separator />
+                  <Separator className="my-5" />
 
-                  {/* Boolean Filters */}
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="grayscale">Đen trắng</Label>
-                    <Switch
-                      id="grayscale"
-                      checked={currentFilters.grayscale}
-                      onCheckedChange={(checked) =>
-                        handleFilterChange("grayscale", checked)
-                      }
-                      disabled={!isImageLoaded}
-                    />
+                  {/* Effects Toggle */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">
+                      Effects
+                    </p>
+
+                    <div className="flex items-center justify-between py-2">
+                      <Label
+                        htmlFor="grayscale"
+                        className="text-xs font-medium text-foreground/80 cursor-pointer"
+                      >
+                        Đen trắng
+                      </Label>
+                      <Switch
+                        id="grayscale"
+                        checked={currentFilters.grayscale}
+                        onCheckedChange={(checked) =>
+                          handleFilterChange("grayscale", checked)
+                        }
+                        disabled={!isImageLoaded}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                      <Label
+                        htmlFor="sepia"
+                        className="text-xs font-medium text-foreground/80 cursor-pointer"
+                      >
+                        Sepia
+                      </Label>
+                      <Switch
+                        id="sepia"
+                        checked={currentFilters.sepia}
+                        onCheckedChange={(checked) =>
+                          handleFilterChange("sepia", checked)
+                        }
+                        disabled={!isImageLoaded}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                      <Label
+                        htmlFor="invert"
+                        className="text-xs font-medium text-foreground/80 cursor-pointer"
+                      >
+                        Đảo màu
+                      </Label>
+                      <Switch
+                        id="invert"
+                        checked={currentFilters.invert}
+                        onCheckedChange={(checked) =>
+                          handleFilterChange("invert", checked)
+                        }
+                        disabled={!isImageLoaded}
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="sepia">Sepia</Label>
-                    <Switch
-                      id="sepia"
-                      checked={currentFilters.sepia}
-                      onCheckedChange={(checked) =>
-                        handleFilterChange("sepia", checked)
-                      }
-                      disabled={!isImageLoaded}
-                    />
-                  </div>
+                  <Separator className="my-5" />
 
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="invert">Đảo màu</Label>
-                    <Switch
-                      id="invert"
-                      checked={currentFilters.invert}
-                      onCheckedChange={(checked) =>
-                        handleFilterChange("invert", checked)
-                      }
-                      disabled={!isImageLoaded}
-                    />
-                  </div>
-
-                  <Separator />
-
-                  {/* Flip Controls */}
-                  <div className="space-y-2">
-                    <Label>Lật ảnh</Label>
+                  {/* Transform */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">
+                      Transform
+                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleFlip("horizontal")}
                         disabled={!isImageLoaded}
+                        className="h-9 text-xs"
                       >
-                        <FlipHorizontal className="mr-2 h-4 w-4" />
+                        <FlipHorizontal className="mr-1.5 h-3.5 w-3.5" />
                         Ngang
                       </Button>
                       <Button
@@ -822,39 +915,42 @@ export function EditorWorkspace({
                         size="sm"
                         onClick={() => handleFlip("vertical")}
                         disabled={!isImageLoaded}
+                        className="h-9 text-xs"
                       >
-                        <FlipVertical className="mr-2 h-4 w-4" />
+                        <FlipVertical className="mr-1.5 h-3.5 w-3.5" />
                         Dọc
                       </Button>
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="my-5" />
 
-                  {/* Reset */}
+                  {/* Reset All */}
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full h-9 text-xs"
                     onClick={handleResetFilters}
                     disabled={!isImageLoaded}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                     Reset tất cả
                   </Button>
                 </TabsContent>
 
                 {/* Presets Tab */}
-                <TabsContent value="presets" className="p-4 space-y-2">
+                <TabsContent value="presets" className="px-5 py-4 space-y-2">
                   {FILTER_PRESETS.map((preset) => (
                     <Button
                       key={preset.name}
                       variant="outline"
-                      className="w-full justify-start h-auto flex-col items-start py-3"
+                      className="w-full justify-start h-auto flex-col items-start py-3 px-4 hover:bg-primary/5 hover:border-primary/30"
                       onClick={() => handleApplyPreset(preset.name)}
                       disabled={!isImageLoaded}
                     >
-                      <span className="font-semibold">{preset.name}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs font-semibold text-foreground">
+                        {preset.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground mt-0.5">
                         {preset.description}
                       </span>
                     </Button>
