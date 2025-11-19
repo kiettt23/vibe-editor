@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Project } from "@/types/project";
+import { DeleteProjectDialog } from "./DeleteProjectDialog";
+import { CreateProjectDialog } from "./CreateProjectDialog";
 
 interface ProjectListProps {
   projects: Project[];
@@ -31,20 +33,30 @@ export function ProjectList({
   const [projects, setProjects] = useState(initialProjects);
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const handleDeleteProject = async (
-    projectId: string,
-    projectName: string
-  ) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa dự án "${projectName}"?`)) return;
+  const handleDeleteClick = (projectId: string, projectName: string) => {
+    setProjectToDelete({ id: projectId, name: projectName });
+    setDeleteDialogOpen(true);
+  };
 
-    setDeletingId(projectId);
+  const handleDeleteConfirm = () => {
+    if (!projectToDelete) return;
+
+    setDeletingId(projectToDelete.id);
 
     startTransition(async () => {
       try {
-        await deleteProject(projectId);
-        setProjects(projects.filter((p) => p.id !== projectId));
+        await deleteProject(projectToDelete.id);
+        setProjects(projects.filter((p) => p.id !== projectToDelete.id));
         toast.success("Xóa dự án thành công!");
+        setDeleteDialogOpen(false);
+        setProjectToDelete(null);
         router.refresh();
       } catch {
         toast.error("Không thể xóa dự án");
@@ -131,11 +143,9 @@ export function ProjectList({
             <p className="text-muted-foreground mb-6">
               Bắt đầu tạo dự án đầu tiên của bạn ngay bây giờ
             </p>
-            <Button asChild>
-              <Link href="/editor">
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo Dự Án Mới
-              </Link>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Tạo Dự Án Mới
             </Button>
           </Card>
         ) : (
@@ -170,7 +180,7 @@ export function ProjectList({
                       size="sm"
                       variant="destructive"
                       onClick={() =>
-                        handleDeleteProject(project.id, project.name)
+                        handleDeleteClick(project.id, project.name)
                       }
                       disabled={isPending && deletingId === project.id}
                     >
@@ -192,6 +202,21 @@ export function ProjectList({
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteProjectDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        projectName={projectToDelete?.name || ""}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={isPending && deletingId === projectToDelete?.id}
+      />
+
+      {/* Create Project Dialog */}
+      <CreateProjectDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
     </div>
   );
 }

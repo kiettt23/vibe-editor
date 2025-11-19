@@ -171,7 +171,8 @@ export default function FooterSection() {
           </Link>
         </div>
         <span className="text-muted-foreground block text-center text-base">
-          © {new Date().getFullYear()} VibeEditor. Bản quyền thuộc về chúng tôi.
+          © {new Date().getFullYear()} VibeEditor. Bản quyền thuộc về
+          VibeEditor.
         </span>
       </div>
     </footer>

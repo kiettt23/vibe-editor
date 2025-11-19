@@ -119,33 +119,40 @@
 
   body {
     @apply bg-background text-foreground;
-    font-size: 13.5px;
+    font-size: 13px;
+    font-weight: 400;
   }
 
-  /* Typography scale - Compact & Modern */
+  /* Typography scale - Ultra Compact & Light */
   h1 {
-    @apply text-2xl font-bold tracking-tight;
+    @apply text-xl font-semibold tracking-tight;
+    font-weight: 600;
   }
 
   h2 {
-    @apply text-xl font-bold tracking-tight;
+    @apply text-lg font-semibold tracking-tight;
+    font-weight: 600;
   }
 
   h3 {
-    @apply text-lg font-semibold;
+    @apply text-base font-medium;
+    font-weight: 500;
   }
 
   h4 {
-    @apply text-base font-semibold;
+    @apply text-sm font-medium;
+    font-weight: 500;
   }
 
   p {
     @apply text-sm leading-relaxed;
+    font-weight: 400;
   }
 
   /* Hero sections */
   .text-hero {
-    @apply text-4xl md:text-6xl font-bold;
+    @apply text-3xl md:text-5xl font-bold;
+    font-weight: 700;
   }
 
   .text-section-title {

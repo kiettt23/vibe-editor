@@ -55,6 +55,8 @@ export interface TransformState {
   scaleX: number;
   scaleY: number;
   rotation: number; // degrees
+  offsetX?: number; // For flip transforms
+  offsetY?: number; // For flip transforms
 }
 
 export const DEFAULT_TRANSFORM_STATE: TransformState = {
@@ -63,6 +65,8 @@ export const DEFAULT_TRANSFORM_STATE: TransformState = {
   scaleX: 1,
   scaleY: 1,
   rotation: 0,
+  offsetX: 0,
+  offsetY: 0,
 };
 
 // ============================================================================

@@ -1,12 +1,10 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAllProjects } from "@/app/actions/projects";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { HeroHeader } from "@/components/shared/header";
 import Footer from "@/components/shared/footer";
 import { ProjectList } from "./_components/ProjectList";
+import { DashboardHeader } from "./_components/DashboardHeader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -37,21 +35,8 @@ export default async function DashboardPage() {
       <HeroHeader />
 
       <main className="container mx-auto px-4 py-20 pt-32">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dự Án Của Bạn</h1>
-            <p className="text-muted-foreground mt-2">
-              Quản lý và chỉnh sửa các dự án của bạn
-            </p>
-          </div>
-          <Button asChild size="lg">
-            <Link href="/editor">
-              <Plus className="mr-2 h-4 w-4" />
-              Tạo Dự Án Mới
-            </Link>
-          </Button>
-        </div>
+        {/* Header with Create Dialog */}
+        <DashboardHeader />
 
         {/* Projects List - Client Component */}
         <ProjectList

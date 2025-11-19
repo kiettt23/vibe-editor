@@ -20,11 +20,17 @@ interface EditorStore extends EditorState {
   setImageNode: (imageNode: Konva.Image | null) => void;
 
   currentFilters: FilterSettings;
-  updateFilters: (filters: Partial<FilterSettings>) => void;
+  updateFilters: (
+    filters: Partial<FilterSettings>,
+    skipDirty?: boolean
+  ) => void;
   resetFilters: () => void;
 
   currentTransform: TransformState;
-  updateTransform: (transform: Partial<TransformState>) => void;
+  updateTransform: (
+    transform: Partial<TransformState>,
+    skipDirty?: boolean
+  ) => void;
   resetTransform: () => void;
 
   activeTool: EditorTool;
@@ -51,11 +57,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   ...initialState,
 
   currentFilters: { ...DEFAULT_FILTER_SETTINGS },
-  updateFilters: (filters) => {
+  updateFilters: (filters, skipDirty = false) => {
     const { currentFilters } = get();
     set({
       currentFilters: { ...currentFilters, ...filters },
-      isDirty: true,
+      isDirty: skipDirty ? get().isDirty : true,
     });
   },
   resetFilters: () =>
@@ -65,11 +71,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }),
 
   currentTransform: { ...DEFAULT_TRANSFORM_STATE },
-  updateTransform: (transform) => {
+  updateTransform: (transform, skipDirty = false) => {
     const { currentTransform } = get();
     set({
       currentTransform: { ...currentTransform, ...transform },
-      isDirty: true,
+      isDirty: skipDirty ? get().isDirty : true,
     });
   },
   resetTransform: () =>

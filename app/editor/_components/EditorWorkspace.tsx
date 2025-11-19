@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -33,8 +33,9 @@ import type { Project, CanvasState } from "@/types/project";
 import {
   saveProjectCanvas,
   uploadProjectThumbnail,
+  deleteProjectImage,
+  uploadProjectImage,
 } from "@/app/actions/projects";
-import { useDebounce } from "@/hooks/useDebounce";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 
 interface EditorWorkspaceProps {
@@ -73,6 +74,7 @@ export function EditorWorkspace({
     setImageLoaded,
     currentFilters,
     updateFilters,
+    updateTransform,
     resetFilters,
     resetTransform,
     setDirty,
@@ -123,9 +125,11 @@ export function EditorWorkspace({
 
     initCanvas();
 
-    // Cleanup on unmount
+    // Cleanup on unmount - Destroy Konva stage to prevent multiple instances
     return () => {
       mounted = false;
+      // Don't destroy canvas here - it breaks hot reload in dev mode
+      // Canvas will be destroyed on page navigation via browser
     };
   }, [isCanvasReady, setStage, setLayer]);
 
@@ -160,10 +164,30 @@ export function EditorWorkspace({
           setImageLoaded(true);
           setOriginalImageSrc(canvasData.imageUrl);
 
-          // Restore filters
+          // Restore filters (skip setting isDirty when loading from database)
           if (canvasData.filters) {
-            updateFilters(canvasData.filters);
+            updateFilters(canvasData.filters, true); // skipDirty=true
             FilterManager.applyFilters(imageNodeInstance, canvasData.filters);
+          }
+
+          // Restore transform (including flip offsets, skip isDirty when loading)
+          if (canvasData.transform) {
+            const {
+              scaleX = 1,
+              scaleY = 1,
+              rotation = 0,
+              offsetX = 0,
+              offsetY = 0,
+            } = canvasData.transform;
+            imageNodeInstance.scaleX(scaleX);
+            imageNodeInstance.scaleY(scaleY);
+            imageNodeInstance.rotation(rotation);
+            imageNodeInstance.offsetX(offsetX);
+            imageNodeInstance.offsetY(offsetY);
+
+            // Update transform state without marking as dirty (loading from DB)
+            updateTransform(canvasData.transform, true); // skipDirty=true
+            layer?.draw();
           }
 
           toast.success("Đã tải project thành công!");
@@ -182,6 +206,8 @@ export function EditorWorkspace({
     setImageLoaded,
     setOriginalImageSrc,
     updateFilters,
+    updateTransform,
+    layer,
   ]);
 
   // ============================================================================
@@ -200,6 +226,23 @@ export function EditorWorkspace({
     }
 
     try {
+      // Delete old image first (if replacing)
+      const canvasData = initialProject?.canvas_data as CanvasState | null;
+      const oldImageUrl = canvasData?.imageUrl;
+
+      if (oldImageUrl) {
+        console.log("🗑️ Deleting old image:", oldImageUrl);
+        try {
+          const deleted = await deleteProjectImage(oldImageUrl);
+          if (deleted) {
+            console.log("✅ Old image deleted from Storage");
+          }
+        } catch (deleteError) {
+          console.warn("⚠️ Failed to delete old image:", deleteError);
+          // Continue anyway - don't block new upload
+        }
+      }
+
       const canvasManager = getCanvasManager();
       await canvasManager.loadImage(file);
 
@@ -207,15 +250,78 @@ export function EditorWorkspace({
       if (imageNodeInstance) {
         setImageNode(imageNodeInstance);
         setImageLoaded(true);
-        setOriginalImageSrc(URL.createObjectURL(file));
+
+        // Upload image to Storage FIRST to get permanent URL
+        let imageUrl: string;
+        if (projectId) {
+          try {
+            toast.info("Đang upload ảnh...");
+            imageUrl = await uploadProjectImage(projectId, file);
+            console.log("✅ Image uploaded to Storage:", imageUrl);
+          } catch (uploadError) {
+            console.error("Failed to upload image:", uploadError);
+            toast.error("Không thể upload ảnh");
+            return;
+          }
+        } else {
+          // Fallback to blob URL if no projectId (shouldn't happen)
+          imageUrl = URL.createObjectURL(file);
+        }
+
+        setOriginalImageSrc(imageUrl);
 
         // Reset về trạng thái ban đầu
         resetFilters();
 
-        // Save initial state
+        // Save initial state (mark as dirty for manual save later)
         saveCurrentState();
 
         toast.success("Đã tải ảnh thành công!");
+
+        // Auto-save on first upload (if project has no image yet)
+        // Use oldImageUrl from earlier check (already have canvasData)
+        const isFirstUpload = !oldImageUrl;
+        if (isFirstUpload && projectId && stage) {
+          try {
+            // Wait a bit for canvas to stabilize
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            const canvasState: Omit<CanvasState, "version"> = {
+              imageUrl, // Now this is a Storage URL, not blob URL
+              filters: currentFilters,
+              transform: {
+                scaleX: imageNodeInstance.scaleX(),
+                scaleY: imageNodeInstance.scaleY(),
+                rotation: imageNodeInstance.rotation(),
+                x: imageNodeInstance.x(),
+                y: imageNodeInstance.y(),
+                offsetX: imageNodeInstance.offsetX(),
+                offsetY: imageNodeInstance.offsetY(),
+              },
+              width: stage.width(),
+              height: stage.height(),
+            };
+
+            // Save to database
+            await saveProjectCanvas(projectId, canvasState);
+
+            // Clear dirty flag after auto-save
+            useEditorStore.setState({ isDirty: false });
+            setLastSaved(new Date());
+
+            // Generate and upload thumbnail
+            const thumbnailBlob = await generateThumbnail();
+            if (thumbnailBlob) {
+              await uploadProjectThumbnail(projectId, thumbnailBlob);
+            }
+
+            toast.success("Đã lưu ảnh tự động!");
+          } catch (autoSaveError) {
+            console.error("Auto-save error:", autoSaveError);
+            // Don't show error - user can still save manually
+            // Keep isDirty=true so warning shows
+          }
+        }
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -229,7 +335,23 @@ export function EditorWorkspace({
       "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
     },
     maxFiles: 1,
+    maxSize: 10 * 1024 * 1024, // 10MB
     disabled: !isCanvasReady,
+    onDropRejected: (fileRejections) => {
+      const rejection = fileRejections[0];
+      if (!rejection) return;
+
+      const { errors } = rejection;
+      const error = errors[0];
+
+      if (error?.code === "file-too-large") {
+        toast.error("File quá lớn! Tối đa 10MB");
+      } else if (error?.code === "file-invalid-type") {
+        toast.error("Chỉ chấp nhận file ảnh (PNG, JPG, WebP)");
+      } else {
+        toast.error("File không hợp lệ");
+      }
+    },
   });
 
   // ============================================================================
@@ -239,11 +361,6 @@ export function EditorWorkspace({
   const saveCurrentState = () => {
     // Mark canvas as dirty (has unsaved changes)
     setDirty(true);
-
-    // Trigger auto-save if project exists
-    if (projectId) {
-      debouncedAutoSave();
-    }
   };
 
   // Get current canvas state for saving
@@ -263,6 +380,8 @@ export function EditorWorkspace({
         rotation: imageNode.rotation(),
         x: imageNode.x(),
         y: imageNode.y(),
+        offsetX: imageNode.offsetX(), // Include offset for flip
+        offsetY: imageNode.offsetY(), // Include offset for flip
       },
       width: stage.width(),
       height: stage.height(),
@@ -292,7 +411,9 @@ export function EditorWorkspace({
     try {
       // Save canvas state first
       await saveProjectCanvas(projectId, canvasState);
-      setDirty(false);
+
+      // Clear dirty state in Zustand store immediately after successful save
+      useEditorStore.setState({ isDirty: false });
       setLastSaved(new Date());
 
       // Generate and upload thumbnail (non-blocking)
@@ -315,26 +436,49 @@ export function EditorWorkspace({
     }
   };
 
-  // Auto-save (debounced)
-  const autoSave = async () => {
-    if (!projectId || !imageNode) return;
+  // Warn before leaving if unsaved changes (browser close/refresh)
+  useLayoutEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Read isDirty from store directly (Zustand state, not React state)
+      const state = useEditorStore.getState();
+      if (state.isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
 
-    const canvasState = getCurrentCanvasState();
-    if (!canvasState) return;
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []); // Empty deps - read from Zustand store directly
 
-    try {
-      await saveProjectCanvas(projectId, canvasState);
-      setDirty(false);
-      setLastSaved(new Date());
-    } catch (error) {
-      console.error("Auto-save error:", error);
-      // Don't show error toast for auto-save failures (silent)
-    }
-  };
+  // Warn before navigation (back button, internal links)
+  useEffect(() => {
+    // Handle browser back/forward buttons
+    const handlePopState = () => {
+      const state = useEditorStore.getState();
 
-  const debouncedAutoSave = useDebounce(autoSave, 3000);
+      if (state.isDirty) {
+        const confirmLeave = window.confirm(
+          "Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời khỏi trang?"
+        );
 
-  // Generate thumbnail from current canvas
+        if (!confirmLeave) {
+          // Prevent navigation by pushing state back
+          window.history.pushState(null, "", window.location.href);
+        }
+        // If user clicks OK, isDirty is still true but we allow navigation
+        // This is expected - user chose to discard changes
+      }
+    };
+
+    // Add INITIAL state to history ONCE (not on every render)
+    window.history.pushState(null, "", window.location.href);
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []); // Empty deps - only run once on mount  // Generate thumbnail from current canvas
   const generateThumbnail = async (): Promise<Blob | null> => {
     if (!stage) return null;
 

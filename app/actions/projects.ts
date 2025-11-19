@@ -28,6 +28,31 @@ export async function createProject(data: {
     throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
+  // Check project limit for free users
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("subscription")
+    .eq("id", user.id)
+    .single();
+
+  // NOTE: Supabase type inference issue - profile type inferred as never
+  const subscriptionTier =
+    (profile as { subscription?: "free" | "pro" } | null)?.subscription ||
+    "free";
+
+  if (subscriptionTier === "free") {
+    const { count } = await supabase
+      .from("projects")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if (count !== null && count >= SUBSCRIPTION.FREE_PROJECT_LIMIT) {
+      throw new Error(
+        `Bạn đã đạt giới hạn ${SUBSCRIPTION.FREE_PROJECT_LIMIT} dự án. Nâng cấp lên Pro để tạo thêm!`
+      );
+    }
+  }
+
   const insertData: ProjectInsert = {
     user_id: user.id,
     name: data.name,
@@ -52,7 +77,7 @@ export async function createProject(data: {
   }
 
   revalidatePath("/dashboard");
-  return project;
+  return project as Project;
 }
 
 export async function updateProject(
@@ -118,7 +143,11 @@ export async function getProject(projectId: string): Promise<Project | null> {
     .single();
 
   if (error) {
-    logError(error, "getProject");
+    // PGRST116 = No rows found (expected when project doesn't exist or wrong user)
+    // Don't log this as error - it's normal behavior
+    if (error.code !== "PGRST116") {
+      logError(error, "getProject");
+    }
     return null;
   }
 
@@ -159,6 +188,37 @@ export async function deleteProject(projectId: string) {
     throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
+  // Get project to find image URL
+  const { data: project } = await supabase
+    .from("projects")
+    .select("canvas_data")
+    .eq("id", projectId)
+    .eq("user_id", user.id)
+    .single<{ canvas_data: { imageUrl?: string } }>();
+
+  // Delete original image from Storage (if exists)
+  if (project?.canvas_data?.imageUrl) {
+    console.log("🗑️ Deleting project image:", project.canvas_data.imageUrl);
+    await deleteProjectImage(project.canvas_data.imageUrl);
+  }
+
+  // Delete thumbnail from Storage (if exists)
+  const { data: files } = await supabase.storage
+    .from("project-thumbnails")
+    .list(`thumbnails/${user.id}`);
+
+  if (files) {
+    const thumbnailFiles = files
+      .filter((f) => f.name.startsWith(projectId))
+      .map((f) => `thumbnails/${user.id}/${f.name}`);
+
+    if (thumbnailFiles.length > 0) {
+      console.log("🗑️ Deleting thumbnails:", thumbnailFiles);
+      await supabase.storage.from("project-thumbnails").remove(thumbnailFiles);
+    }
+  }
+
+  // Delete project from database
   const { error } = await supabase
     .from("projects")
     .delete()
@@ -291,21 +351,89 @@ export async function uploadProjectThumbnail(
     throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
+  try {
+    // Generate unique filename
+    const fileName = `${projectId}-${Date.now()}.png`;
+    const filePath = `thumbnails/${user.id}/${fileName}`;
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from("project-thumbnails")
+      .upload(filePath, thumbnailBlob, {
+        contentType: "image/png",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      logError(uploadError, "uploadProjectThumbnail");
+      // Don't throw - make thumbnail optional
+      console.warn("Thumbnail upload failed, continuing without thumbnail");
+      return null;
+    }
+
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("project-thumbnails").getPublicUrl(filePath);
+
+    // Update project with thumbnail URL
+    const { error: updateError } = await supabase
+      .from("projects")
+      // @ts-expect-error - Supabase v2 Update type inference limitation
+      .update({ thumbnail_url: publicUrl })
+      .eq("id", projectId)
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      logError(updateError, "uploadProjectThumbnail - update");
+      // Don't throw - thumbnail is optional
+      console.warn("Thumbnail URL update failed");
+      return null;
+    }
+
+    revalidatePath("/dashboard");
+    return publicUrl;
+  } catch (error) {
+    // Catch any unexpected errors - make thumbnail fully optional
+    logError(error, "uploadProjectThumbnail - unexpected");
+    console.warn("Thumbnail upload failed completely, continuing without it");
+    return null;
+  }
+}
+
+/**
+ * Upload original full-size image to Storage
+ * Returns public URL for saving to canvas_data
+ */
+export async function uploadProjectImage(
+  projectId: string,
+  imageFile: File
+): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
+  }
+
   // Generate unique filename
-  const fileName = `${projectId}-${Date.now()}.png`;
-  const filePath = `thumbnails/${user.id}/${fileName}`;
+  const fileExt = imageFile.name.split(".").pop() || "png";
+  const fileName = `${projectId}-${Date.now()}.${fileExt}`;
+  const filePath = `images/${user.id}/${fileName}`;
 
   // Upload to Supabase Storage
   const { error: uploadError } = await supabase.storage
     .from("project-thumbnails")
-    .upload(filePath, thumbnailBlob, {
-      contentType: "image/png",
+    .upload(filePath, imageFile, {
+      contentType: imageFile.type,
       upsert: true,
     });
 
   if (uploadError) {
-    logError(uploadError, "uploadProjectThumbnail");
-    throw new Error("Không thể upload thumbnail");
+    logError(uploadError, "uploadProjectImage");
+    throw new Error("Không thể upload ảnh lên Storage");
   }
 
   // Get public URL
@@ -313,20 +441,6 @@ export async function uploadProjectThumbnail(
     data: { publicUrl },
   } = supabase.storage.from("project-thumbnails").getPublicUrl(filePath);
 
-  // Update project with thumbnail URL
-  const { error: updateError } = await supabase
-    .from("projects")
-    // @ts-expect-error - Supabase v2 Update type inference limitation
-    .update({ thumbnail_url: publicUrl })
-    .eq("id", projectId)
-    .eq("user_id", user.id);
-
-  if (updateError) {
-    logError(updateError, "uploadProjectThumbnail - update");
-    throw new Error("Không thể cập nhật thumbnail");
-  }
-
-  revalidatePath("/dashboard");
   return publicUrl;
 }
 
@@ -358,3 +472,47 @@ export async function getUserSubscription(): Promise<"free" | "pro"> {
 
   return isPro ? "pro" : "free";
 }
+
+// ============================================================================
+// IMAGE MANAGEMENT
+// ============================================================================
+
+/**
+ * Delete image from Storage bucket
+ * Used when replacing project image
+ */
+export async function deleteProjectImage(imageUrl: string) {
+  const supabase = await createClient();
+
+  try {
+    // Parse URL to get file path
+    // Example URL: https://abc.supabase.co/storage/v1/object/public/project-thumbnails/user-id/file.png
+    const url = new URL(imageUrl);
+    const pathMatch = url.pathname.match(/\/project-thumbnails\/(.+)$/);
+
+    if (!pathMatch) {
+      console.warn("Invalid image URL format:", imageUrl);
+      return false;
+    }
+
+    const filePath = pathMatch[1];
+    console.log("Deleting file from Storage:", filePath);
+
+    const { error } = await supabase.storage
+      .from("project-thumbnails")
+      .remove([filePath]);
+
+    if (error) {
+      console.warn("Storage delete error:", error);
+      return false;
+    }
+
+    console.log("Image deleted successfully from Storage");
+    return true;
+  } catch (error) {
+    console.warn("Error parsing/deleting image:", error);
+    return false;
+  }
+}
+
+// ============================================================================

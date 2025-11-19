@@ -2,10 +2,22 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { logoutAction } from "@/app/actions/auth";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const menuItems = [
   { name: "Tính năng", href: "/features" },
@@ -16,6 +28,7 @@ const menuItems = [
 export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [user, setUser] = React.useState<SupabaseUser | null>(null);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -24,11 +37,33 @@ export const HeroHeader = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  React.useEffect(() => {
+    const supabase = createClient();
+
+    // Get initial session
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await logoutAction();
+  };
   return (
     <header>
       <nav
         data-state={menuState && "active"}
-        className="fixed z-20 w-full px-2"
+        className="fixed z-50 w-full px-2"
       >
         <div
           className={cn(
@@ -87,45 +122,113 @@ export const HeroHeader = () => {
                   ))}
                 </ul>
               </div>
-              <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="default"
-                  className={cn(
-                    "text-base font-medium",
-                    isScrolled && "lg:hidden"
-                  )}
-                >
-                  <Link href="/login">
-                    <span>Đăng nhập</span>
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="default"
-                  className={cn(
-                    "text-base font-medium",
-                    isScrolled && "lg:hidden"
-                  )}
-                >
-                  <Link href="/signup">
-                    <span>Đăng ký</span>
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="default"
-                  className={cn(
-                    "text-base font-medium",
-                    isScrolled ? "lg:inline-flex" : "hidden"
-                  )}
-                >
-                  <Link href="/editor">
-                    <span>Bắt đầu ngay</span>
-                  </Link>
-                </Button>
-              </div>
+
+              {/* Auth Buttons - Show only when NOT logged in */}
+              {!user && (
+                <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="default"
+                    className={cn(
+                      "text-base font-medium",
+                      isScrolled && "lg:hidden"
+                    )}
+                  >
+                    <Link href="/login">
+                      <span>Đăng nhập</span>
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="default"
+                    className={cn(
+                      "text-base font-medium",
+                      isScrolled && "lg:hidden"
+                    )}
+                  >
+                    <Link href="/signup">
+                      <span>Đăng ký</span>
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="default"
+                    className={cn(
+                      "text-base font-medium",
+                      isScrolled ? "lg:inline-flex" : "hidden"
+                    )}
+                  >
+                    <Link href="/editor">
+                      <span>Bắt đầu ngay</span>
+                    </Link>
+                  </Button>
+                </div>
+              )}
+
+              {/* User Menu - Show only when logged in */}
+              {user && (
+                <div className="flex w-full items-center gap-3 sm:w-fit">
+                  <Button
+                    asChild
+                    size="default"
+                    className="text-base font-medium"
+                  >
+                    <Link href="/dashboard">
+                      <span>Dashboard</span>
+                    </Link>
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative h-9 w-9 rounded-full"
+                      >
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {user.email?.charAt(0).toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">
+                            {user.user_metadata?.full_name || "User"}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/editor" className="cursor-pointer">
+                          <span className="mr-2">🎨</span>
+                          <span>Editor</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="cursor-pointer text-red-600 focus:text-red-600"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Đăng xuất</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </div>
           </div>
         </div>
