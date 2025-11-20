@@ -16,18 +16,24 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Project } from "@/types/project";
+import type { SubscriptionStatus } from "@/types/subscription";
 import { DeleteProjectDialog } from "./DeleteProjectDialog";
 import { CreateProjectDialog } from "./CreateProjectDialog";
+import { ProBadge } from "@/components/shared/pro-badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Sparkles } from "lucide-react";
 
 interface ProjectListProps {
   projects: Project[];
   userEmail?: string;
   subscription?: string;
+  subscriptionStatus: SubscriptionStatus;
 }
 
 export function ProjectList({
   projects: initialProjects,
   subscription,
+  subscriptionStatus,
 }: ProjectListProps) {
   const router = useRouter();
   const [projects, setProjects] = useState(initialProjects);
@@ -97,12 +103,21 @@ export function ProjectList({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Gói Đăng Ký</CardTitle>
+            {subscription === "pro" && <ProBadge />}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold flex items-center gap-2">
               {subscription === "pro" ? "Pro" : "Miễn Phí"}
             </div>
-            {subscription !== "pro" && (
+            {subscription === "pro" ? (
+              <p className="text-xs text-muted-foreground mt-1">
+                {subscriptionStatus.isTrial
+                  ? `Trial: còn ${subscriptionStatus.daysRemaining} ngày`
+                  : subscriptionStatus.daysRemaining !== null
+                  ? `Còn ${subscriptionStatus.daysRemaining} ngày`
+                  : "Không giới hạn"}
+              </p>
+            ) : (
               <Button asChild variant="link" size="sm" className="px-0 h-auto">
                 <Link href="/pricing">Nâng cấp lên Pro →</Link>
               </Button>
@@ -134,7 +149,48 @@ export function ProjectList({
 
       {/* Projects Grid */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Tất Cả Dự Án</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Tất Cả Dự Án</h2>
+          {subscription === "free" && (
+            <p className="text-sm text-muted-foreground">
+              {projects.length} / 5 dự án
+            </p>
+          )}
+        </div>
+
+        {/* Project Limit Warning for Free Users */}
+        {subscription === "free" && projects.length >= 4 && (
+          <Alert className="mb-6 border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
+            <Sparkles className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-sm">
+              {projects.length >= 5 ? (
+                <>
+                  Bạn đã đạt giới hạn <strong>5 dự án</strong> của gói Miễn Phí.
+                  Nâng cấp lên{" "}
+                  <Link
+                    href="/pricing"
+                    className="underline font-semibold hover:text-primary"
+                  >
+                    Pro
+                  </Link>{" "}
+                  để tạo không giới hạn dự án!
+                </>
+              ) : (
+                <>
+                  Bạn sắp đạt giới hạn của gói Miễn Phí ({5 - projects.length}{" "}
+                  dự án còn lại). Nâng cấp lên{" "}
+                  <Link
+                    href="/pricing"
+                    className="underline font-semibold hover:text-primary"
+                  >
+                    Pro
+                  </Link>{" "}
+                  để không giới hạn!
+                </>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {projects.length === 0 ? (
           <Card className="p-12 text-center">

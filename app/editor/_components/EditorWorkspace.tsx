@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
 
 // Custom hooks
 import { useCanvasSetup } from "@/hooks/editor/useCanvasSetup";
@@ -57,6 +58,9 @@ export function EditorWorkspace({
   const [activeTab, setActiveTab] = useState<ToolbarTab>("upload");
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Subscription
+  const { isPro } = useSubscription();
 
   // Custom hooks
   const { isCanvasReady, containerRef } = useCanvasSetup();
@@ -192,12 +196,9 @@ export function EditorWorkspace({
     }
 
     try {
-      // Check user subscription for watermark
-      const { getUserSubscription } = await import("@/app/actions/projects");
-      const subscription = await getUserSubscription();
-      const isFree = subscription === "free";
-
       const filename = ExportManager.generateFilename("vibe-editor", format);
+      const addWatermark = !isPro; // Free users get watermark
+
       await ExportManager.downloadImage(
         stage,
         filename,
@@ -206,11 +207,11 @@ export function EditorWorkspace({
           quality: 0.95,
           pixelRatio: 2,
         },
-        isFree
+        addWatermark
       );
 
       toast.success(
-        isFree
+        addWatermark
           ? `Đã export với watermark (nâng cấp Pro để bỏ watermark)`
           : `Đã export: ${filename}`
       );
@@ -218,9 +219,7 @@ export function EditorWorkspace({
       console.error("Export error:", error);
       toast.error("Không thể export ảnh");
     }
-  };
-
-  // ============================================================================
+  }; // ============================================================================
   // KEYBOARD SHORTCUTS
   // ============================================================================
 
@@ -303,6 +302,7 @@ export function EditorWorkspace({
         {/* Right Sidebar - Adjustments (Collapsible) */}
         <AdjustmentsPanel
           isImageLoaded={isImageLoaded}
+          isPro={isPro}
           currentFilters={currentFilters}
           onFilterChange={handleFilterChange}
           onFlip={handleFlip}

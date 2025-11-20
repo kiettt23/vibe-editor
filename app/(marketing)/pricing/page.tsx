@@ -19,6 +19,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { HeroHeader } from "@/components/shared/header";
 import Footer from "@/components/shared/footer";
+import { ProBadge } from "@/components/shared/pro-badge";
 
 const plans = [
   {
@@ -26,34 +27,33 @@ const plans = [
     price: "0đ",
     description: "Hoàn hảo để dùng thử VibeEditor",
     features: [
-      "Upload ảnh không giới hạn",
+      "Dùng thử Pro 3 ngày khi đăng ký",
       "Lưu tối đa 5 dự án",
-      "Tất cả filters cơ bản (10+ filters)",
-      "Hơn 8 preset filters chuyên nghiệp",
-      "Real-time adjustments (Brightness, Contrast, Saturation)",
+      "Filters cơ bản (Brightness, Contrast, Blur)",
+      "3 preset filters (Original, Vintage, B&W)",
       "Transform tools (Flip, Rotate)",
-      "Export PNG/JPEG/WebP (2x resolution)",
-      "Có watermark nhỏ khi export",
+      "Export PNG (2x resolution)",
+      "Có watermark khi export",
     ],
     cta: "Bắt đầu ngay",
-    href: "/editor",
+    href: "/signup",
     popular: false,
   },
   {
     name: "Pro",
     price: "199.000đ",
     period: "/tháng",
-    description: "Dành cho chuyên gia cần nhiều tính năng hơn",
+    description: "Dành cho người dùng chuyên nghiệp",
     features: [
-      "Tất cả tính năng Miễn phí",
       "Dự án không giới hạn",
+      "TẤT CẢ filters nâng cao (Saturation, Hue)",
+      "TẤT CẢ 10 preset filters cao cấp",
       "Không có watermark khi export",
+      "Export tất cả định dạng (PNG, JPEG, WebP)",
       "Auto-save mọi thao tác",
-      "Thumbnail tự động cho mỗi project",
       "Keyboard shortcuts (Ctrl+S, Ctrl+E, Ctrl+R)",
-      "Version history đầy đủ",
-      "Hỗ trợ ưu tiên qua email",
-      "Truy cập sớm tính năng mới (AI tools)",
+      "Hỗ trợ ưu tiên",
+      "Truy cập sớm tính năng mới",
     ],
     cta: "Nâng cấp Pro",
     href: "/signup",
@@ -96,7 +96,10 @@ export default function PricingPage() {
               )}
 
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  {plan.popular && <ProBadge />}
+                </div>
                 <CardDescription>{plan.description}</CardDescription>
                 <div className="mt-4">
                   <span className="text-5xl font-bold">{plan.price}</span>

@@ -44,6 +44,32 @@ export interface Database {
           updated_at?: string;
         };
       };
+      user_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          subscription_tier: string;
+          subscription_expires_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          subscription_tier?: string;
+          subscription_expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          subscription_tier?: string;
+          subscription_expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       user_profiles: {
         Row: {
           id: string;

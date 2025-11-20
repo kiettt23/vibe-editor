@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAllProjects } from "@/app/actions/projects";
+import {
+  getUserSubscription,
+  getSubscriptionStatus,
+} from "@/lib/subscription/get-subscription";
 import { HeroHeader } from "@/components/shared/header";
 import Footer from "@/components/shared/footer";
 import { ProjectList } from "./_components/ProjectList";
@@ -27,8 +31,9 @@ export default async function DashboardPage() {
   // Fetch projects server-side
   const projects = await getAllProjects();
 
-  // Get user subscription (from user_metadata or user_profiles table)
-  const subscription = user.user_metadata?.subscription || "free";
+  // Get user subscription from database
+  const subscription = await getUserSubscription();
+  const subscriptionStatus = await getSubscriptionStatus();
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,6 +48,7 @@ export default async function DashboardPage() {
           projects={projects}
           userEmail={user.email}
           subscription={subscription}
+          subscriptionStatus={subscriptionStatus}
         />
       </main>
 

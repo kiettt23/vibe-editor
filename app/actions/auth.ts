@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ERROR_MESSAGES } from "@/lib/constants";
 import { logError } from "@/lib/error-handler";
 
 export async function loginWithEmailAction(formData: FormData) {
@@ -57,6 +56,9 @@ export async function signupWithEmailAction(formData: FormData) {
   if (data.user && data.user.identities && data.user.identities.length === 0) {
     return { error: "Email đã được sử dụng" };
   }
+
+  // Trial is auto-assigned by database trigger
+  // No need to manually call assignTrialToNewUser
 
   revalidatePath("/", "layout");
   redirect("/dashboard");

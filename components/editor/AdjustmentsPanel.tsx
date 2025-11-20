@@ -22,9 +22,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ProGateButton } from "@/components/shared/pro-gate-button";
 
 interface AdjustmentsPanelProps {
   isImageLoaded: boolean;
+  isPro: boolean;
   currentFilters: FilterSettings;
   onFilterChange: (
     filterType: keyof FilterSettings,
@@ -42,6 +44,7 @@ interface AdjustmentsPanelProps {
 
 export function AdjustmentsPanel({
   isImageLoaded,
+  isPro,
   currentFilters,
   onFilterChange,
   onFlip,
@@ -166,29 +169,45 @@ export function AdjustmentsPanel({
                   onChange={(value) => onFilterChange("contrast", value)}
                 />
 
-                {/* Saturation */}
-                <SliderWithInput
-                  id="saturation"
-                  label="Độ bão hòa"
-                  value={currentFilters.saturation}
-                  min={-1}
-                  max={1}
-                  step={0.01}
-                  disabled={!isImageLoaded}
-                  onChange={(value) => onFilterChange("saturation", value)}
-                />
+                {/* Saturation - PRO */}
+                <ProGateButton
+                  isPro={isPro}
+                  featureName="Điều chỉnh độ bão hòa"
+                  featureDescription="Tính năng điều chỉnh độ bão hòa (Saturation) nâng cao chỉ dành cho thành viên Pro."
+                  showBadge={!isPro}
+                  className="w-full"
+                >
+                  <SliderWithInput
+                    id="saturation"
+                    label="Độ bão hòa"
+                    value={currentFilters.saturation}
+                    min={-1}
+                    max={1}
+                    step={0.01}
+                    disabled={!isImageLoaded || !isPro}
+                    onChange={(value) => onFilterChange("saturation", value)}
+                  />
+                </ProGateButton>
 
-                {/* Hue */}
-                <SliderWithInput
-                  id="hue"
-                  label="Sắc độ"
-                  value={currentFilters.hue}
-                  min={0}
-                  max={359}
-                  step={1}
-                  disabled={!isImageLoaded}
-                  onChange={(value) => onFilterChange("hue", value)}
-                />
+                {/* Hue - PRO */}
+                <ProGateButton
+                  isPro={isPro}
+                  featureName="Điều chỉnh sắc độ"
+                  featureDescription="Tính năng điều chỉnh sắc độ màu (Hue) nâng cao chỉ dành cho thành viên Pro."
+                  showBadge={!isPro}
+                  className="w-full"
+                >
+                  <SliderWithInput
+                    id="hue"
+                    label="Sắc độ"
+                    value={currentFilters.hue}
+                    min={0}
+                    max={359}
+                    step={1}
+                    disabled={!isImageLoaded || !isPro}
+                    onChange={(value) => onFilterChange("hue", value)}
+                  />
+                </ProGateButton>
 
                 <Separator className="my-5" />
 
@@ -350,22 +369,35 @@ export function AdjustmentsPanel({
               {/* Presets Tab */}
               <TabsContent value="presets" className="px-5 py-4">
                 <div className="space-y-2">
-                  {FILTER_PRESETS.map((preset) => (
-                    <Button
-                      key={preset.name}
-                      variant="outline"
-                      className="w-full justify-start h-auto flex-col items-start py-3 px-4 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
-                      onClick={() => onApplyPreset(preset.name)}
-                      disabled={!isImageLoaded}
-                    >
-                      <span className="text-xs font-semibold text-foreground">
-                        {preset.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground mt-0.5">
-                        {preset.description}
-                      </span>
-                    </Button>
-                  ))}
+                  {FILTER_PRESETS.map((preset, index) => {
+                    const isFreePreset = index < 3; // First 3 presets are free
+                    const canUse = isPro || isFreePreset;
+
+                    return (
+                      <ProGateButton
+                        key={preset.name}
+                        isPro={canUse}
+                        featureName={`Preset: ${preset.name}`}
+                        featureDescription={`Preset "${preset.name}" - ${preset.description}. Nâng cấp Pro để sử dụng tất cả presets cao cấp.`}
+                        showBadge={!canUse}
+                        className="w-full"
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start h-auto flex-col items-start py-3 px-4 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
+                          onClick={() => onApplyPreset(preset.name)}
+                          disabled={!isImageLoaded || !canUse}
+                        >
+                          <span className="text-xs font-semibold text-foreground">
+                            {preset.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground mt-0.5">
+                            {preset.description}
+                          </span>
+                        </Button>
+                      </ProGateButton>
+                    );
+                  })}
                 </div>
               </TabsContent>
             </Tabs>
