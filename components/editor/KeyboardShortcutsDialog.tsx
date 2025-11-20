@@ -30,21 +30,33 @@ const shortcuts = [
   },
 ];
 
-export function KeyboardShortcutsDialog() {
-  const [open, setOpen] = useState(false);
+interface KeyboardShortcutsDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function KeyboardShortcutsDialog({
+  open: controlledOpen,
+  onOpenChange,
+}: KeyboardShortcutsDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl + K hoặc Ctrl + / để mở shortcuts dialog
       if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "/")) {
         e.preventDefault();
-        setOpen((prev) => !prev);
+        setOpen(!open);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [open, setOpen]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -66,16 +78,16 @@ export function KeyboardShortcutsDialog() {
                 {section.items.map((shortcut, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between py-2.5 px-4 rounded-lg hover:bg-accent/50 transition-all hover:shadow-sm group"
                   >
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-foreground/80 group-hover:text-foreground font-medium">
                       {shortcut.description}
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {shortcut.keys.map((key, keyIndex) => (
                         <kbd
                           key={keyIndex}
-                          className="px-2 py-1 rounded bg-muted border border-border font-mono text-xs"
+                          className="px-3 py-1.5 rounded-md bg-linear-to-b from-muted to-muted/80 border border-border shadow-sm font-mono text-xs font-semibold text-foreground min-w-10 text-center"
                         >
                           {key}
                         </kbd>

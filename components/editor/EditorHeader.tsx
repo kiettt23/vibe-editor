@@ -1,7 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Download, Save, Loader2, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  Download,
+  Save,
+  Loader2,
+  ZoomIn,
+  ZoomOut,
+  ChevronDown,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -38,14 +52,22 @@ export function EditorHeader({
     <div className="flex h-14 items-center justify-between border-b px-4 bg-card/50 backdrop-blur-sm">
       {/* Left: Logo + Status */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
           <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-accent flex items-center justify-center shadow-sm">
             <span className="text-white text-sm font-bold">VE</span>
           </div>
-          <span className="text-sm font-semibold text-foreground">
-            VibeEditor
-          </span>
-        </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-foreground leading-none">
+              Vibe Editor
+            </span>
+            <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
+              Chỉnh sửa ảnh chuyên nghiệp
+            </span>
+          </div>
+        </Link>
 
         {isImageLoaded && (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
@@ -118,7 +140,7 @@ export function EditorHeader({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={onSave}
                   disabled={!isImageLoaded || isSaving}
@@ -143,57 +165,43 @@ export function EditorHeader({
             </Tooltip>
           )}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => onExport("png")}
-                disabled={!isImageLoaded}
-                className="h-9 px-3"
-              >
-                <Download className="mr-1.5 h-4 w-4" />
-                <span className="text-xs">PNG</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Export PNG (Ctrl + E)</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Export Dropdown */}
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    disabled={!isImageLoaded}
+                    className="h-9 px-3"
+                  >
+                    <Download className="mr-1.5 h-4 w-4" />
+                    <span className="text-xs">Export</span>
+                    <ChevronDown className="ml-1 h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Export ảnh (Ctrl + E)</p>
+              </TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onExport("jpeg")}
-                disabled={!isImageLoaded}
-                className="h-9 px-3"
-              >
-                <span className="text-xs">JPG</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Export JPEG</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onExport("webp")}
-                disabled={!isImageLoaded}
-                className="h-9 px-3"
-              >
-                <span className="text-xs">WebP</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Export WebP</p>
-            </TooltipContent>
-          </Tooltip>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => onExport("png")}>
+                <Download className="mr-2 h-4 w-4" />
+                <span className="text-xs">Export PNG</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport("jpeg")}>
+                <Download className="mr-2 h-4 w-4" />
+                <span className="text-xs">Export JPG</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport("webp")}>
+                <Download className="mr-2 h-4 w-4" />
+                <span className="text-xs">Export WebP</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </TooltipProvider>
     </div>

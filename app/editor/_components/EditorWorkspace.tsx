@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { toast } from "sonner";
 
@@ -13,7 +14,11 @@ import { useEditorShortcuts } from "@/hooks/editor/useEditorShortcuts";
 
 // Components
 import { EditorHeader } from "@/components/editor/EditorHeader";
-import { UploadPanel } from "@/components/editor/UploadPanel";
+import {
+  VerticalToolbar,
+  type ToolbarTab,
+} from "@/components/editor/VerticalToolbar";
+import { CenteredUpload } from "@/components/editor/CenteredUpload";
 import { CanvasArea } from "@/components/editor/CanvasArea";
 import { AdjustmentsPanel } from "@/components/editor/AdjustmentsPanel";
 import { EditorFooter } from "@/components/editor/EditorFooter";
@@ -48,6 +53,11 @@ export function EditorWorkspace({
   projectId,
   initialProject,
 }: EditorWorkspaceProps = {}) {
+  // UI State
+  const [activeTab, setActiveTab] = useState<ToolbarTab>("upload");
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
   // Custom hooks
   const { isCanvasReady, containerRef } = useCanvasSetup();
   const { handleSave, isSaving, lastSaved } = useEditorSave({ projectId });
@@ -247,20 +257,50 @@ export function EditorWorkspace({
         onZoomReset={handleZoomReset}
       />
 
+      {/* Hidden file input (global) */}
+      <input
+        type="file"
+        id="centered-file-input"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleImageUpload([file]);
+        }}
+        className="hidden"
+      />
+
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Upload Panel */}
-        <UploadPanel
-          isCanvasReady={isCanvasReady}
+        {/* Vertical Toolbar (Left) */}
+        <VerticalToolbar
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            if (tab === "help") {
+              setShowShortcuts(true);
+            } else {
+              setActiveTab(tab);
+            }
+          }}
           isImageLoaded={isImageLoaded}
-          isUploading={isUploading}
-          onImageUpload={handleImageUpload}
+          onUploadClick={() =>
+            document.getElementById("centered-file-input")?.click()
+          }
         />
 
-        {/* Canvas Area */}
-        <CanvasArea isImageLoaded={isImageLoaded} zoom={zoom} />
+        {/* Canvas Area with Centered Upload Overlay */}
+        <div className="flex-1 relative">
+          {/* Canvas always rendered (needed for Konva init) */}
+          <CanvasArea zoom={zoom} />
 
-        {/* Right Sidebar - Adjustments */}
+          {/* Upload overlay when no image */}
+          {!isImageLoaded && (
+            <div className="absolute inset-0 bg-background/95 z-10">
+              <CenteredUpload isUploading={isUploading} />
+            </div>
+          )}
+        </div>
+
+        {/* Right Sidebar - Adjustments (Collapsible) */}
         <AdjustmentsPanel
           isImageLoaded={isImageLoaded}
           currentFilters={currentFilters}
@@ -269,6 +309,19 @@ export function EditorWorkspace({
           onRotate={handleRotate}
           onApplyPreset={handleApplyPreset}
           onReset={handleResetAll}
+          isCollapsed={isRightPanelCollapsed}
+          onToggleCollapse={() =>
+            setIsRightPanelCollapsed(!isRightPanelCollapsed)
+          }
+          activeTab={
+            activeTab === "filters"
+              ? "filters"
+              : activeTab === "transform"
+              ? "transform"
+              : activeTab === "presets"
+              ? "presets"
+              : "filters"
+          }
         />
       </div>
 
@@ -276,7 +329,10 @@ export function EditorWorkspace({
       <EditorFooter isImageLoaded={isImageLoaded} isDirty={isDirty} />
 
       {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcutsDialog />
+      <KeyboardShortcutsDialog
+        open={showShortcuts}
+        onOpenChange={setShowShortcuts}
+      />
     </div>
   );
 }
