@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getUserSubscription } from "@/lib/subscription/get-subscription";
+import { getUserSubscriptionTier } from "@/app/actions/subscription";
 import type { SubscriptionTier } from "@/types/subscription";
 
 export function useSubscription() {
@@ -11,7 +11,7 @@ export function useSubscription() {
   useEffect(() => {
     async function loadSubscription() {
       try {
-        const userTier = await getUserSubscription();
+        const userTier = await getUserSubscriptionTier();
         setTier(userTier);
       } catch (error) {
         console.error("Failed to load subscription:", error);

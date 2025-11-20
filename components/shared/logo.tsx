@@ -1,21 +1,27 @@
 import { cn } from "@/lib/utils";
+import { ProBadge } from "./pro-badge";
 
 export const Logo = ({
   className,
   uniColor,
+  showProBadge = false,
 }: {
   className?: string;
   uniColor?: boolean;
+  showProBadge?: boolean;
 }) => {
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <LogoIcon uniColor={uniColor} />
-      <span className="text-2xl font-bold tracking-tight">
-        <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
-          Vibe
+      <div className="flex items-center gap-2">
+        <span className="text-2xl font-bold tracking-tight">
+          <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
+            Vibe
+          </span>
+          <span className="text-foreground">Editor</span>
         </span>
-        <span className="text-foreground">Editor</span>
-      </span>
+        {showProBadge && <ProBadge size="sm" />}
+      </div>
     </div>
   );
 };

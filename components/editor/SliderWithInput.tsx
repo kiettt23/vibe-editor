@@ -49,7 +49,7 @@ export function SliderWithInput({
           value={inputValue}
           onChange={handleInputChange}
           disabled={disabled}
-          className="h-7 w-20 text-xs text-right tabular-nums px-2"
+          className="h-7 w-16 text-xs text-right tabular-nums px-2 [&::-webkit-inner-spin-button]:opacity-0 [&::-webkit-inner-spin-button]:hover:opacity-100 [&::-webkit-outer-spin-button]:opacity-0 [&::-webkit-outer-spin-button]:hover:opacity-100"
         />
       </div>
       <Slider

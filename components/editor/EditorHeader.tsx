@@ -22,6 +22,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ProBadge } from "@/components/shared/pro-badge";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface EditorHeaderProps {
   projectId?: string;
@@ -48,6 +50,8 @@ export function EditorHeader({
   onZoomOut,
   onZoomReset,
 }: EditorHeaderProps) {
+  const { isPro } = useSubscription();
+
   return (
     <div className="flex h-14 items-center justify-between border-b px-4 bg-card/50 backdrop-blur-sm">
       {/* Left: Logo + Status */}
@@ -59,13 +63,16 @@ export function EditorHeader({
           <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-accent flex items-center justify-center shadow-sm">
             <span className="text-white text-sm font-bold">VE</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground leading-none">
-              Vibe Editor
-            </span>
-            <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
-              Chỉnh sửa ảnh chuyên nghiệp
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-foreground leading-none">
+                Vibe Editor
+              </span>
+              <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
+                Chỉnh sửa ảnh chuyên nghiệp
+              </span>
+            </div>
+            {isPro && <ProBadge size="sm" />}
           </div>
         </Link>
 

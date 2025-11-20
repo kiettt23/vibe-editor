@@ -42,7 +42,7 @@ export function ProGateButton({
     <>
       <div
         className={cn(
-          "relative inline-flex items-center gap-2",
+          "relative flex items-center gap-2 w-full",
           !isPro && !disabled && "cursor-pointer",
           disabled && "opacity-50 cursor-not-allowed",
           className
@@ -52,7 +52,7 @@ export function ProGateButton({
         {/* Content */}
         <div
           className={cn(
-            "relative",
+            "relative flex-1 w-full",
             !isPro && !disabled && "pointer-events-none"
           )}
         >
@@ -61,7 +61,7 @@ export function ProGateButton({
 
         {/* Pro Badge/Lock Icon */}
         {!isPro && showBadge && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Lock className="w-3 h-3 text-muted-foreground" />
             <ProBadge size="sm" />
           </div>

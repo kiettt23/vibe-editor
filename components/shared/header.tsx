@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { logoutAction } from "@/app/actions/auth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const menuItems = [
   { name: "Giới thiệu", href: "/" },
@@ -29,6 +30,12 @@ export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [user, setUser] = React.useState<SupabaseUser | null>(null);
+  const { isPro, isLoading } = useSubscription();
+
+  // Only show badge if user is logged in AND isPro is true AND not loading
+  const shouldShowBadge = React.useMemo(() => {
+    return user !== null && isPro === true && !isLoading;
+  }, [user, isPro, isLoading]);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -79,7 +86,7 @@ export const HeroHeader = () => {
                 aria-label="home"
                 className="flex items-center space-x-2"
               >
-                <Logo />
+                <Logo showProBadge={shouldShowBadge} />
               </Link>
 
               <button

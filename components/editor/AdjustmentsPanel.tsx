@@ -118,14 +118,23 @@ export function AdjustmentsPanel({
               className="w-full"
             >
               <div className="px-5 my-3">
-                <TabsList className="w-full grid grid-cols-3">
-                  <TabsTrigger value="adjustments" className="text-[11px] px-2">
+                <TabsList className="w-full grid grid-cols-3 gap-0">
+                  <TabsTrigger
+                    value="adjustments"
+                    className="text-[11px] px-2 flex-1"
+                  >
                     Filters
                   </TabsTrigger>
-                  <TabsTrigger value="transform" className="text-[11px] px-2">
+                  <TabsTrigger
+                    value="transform"
+                    className="text-[11px] px-2 flex-1"
+                  >
                     Transform
                   </TabsTrigger>
-                  <TabsTrigger value="presets" className="text-[11px] px-2">
+                  <TabsTrigger
+                    value="presets"
+                    className="text-[11px] px-2 flex-1"
+                  >
                     Presets
                   </TabsTrigger>
                 </TabsList>
@@ -384,14 +393,14 @@ export function AdjustmentsPanel({
                       >
                         <Button
                           variant="outline"
-                          className="w-full justify-start h-auto flex-col items-start py-3 px-4 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
+                          className="w-full justify-start min-h-[60px] flex-col items-start py-3 px-4 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
                           onClick={() => onApplyPreset(preset.name)}
                           disabled={!isImageLoaded || !canUse}
                         >
-                          <span className="text-xs font-semibold text-foreground">
+                          <span className="text-xs font-semibold text-foreground line-clamp-1">
                             {preset.name}
                           </span>
-                          <span className="text-xs text-muted-foreground mt-0.5">
+                          <span className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                             {preset.description}
                           </span>
                         </Button>

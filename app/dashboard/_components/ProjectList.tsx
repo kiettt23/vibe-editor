@@ -22,6 +22,7 @@ import { CreateProjectDialog } from "./CreateProjectDialog";
 import { ProBadge } from "@/components/shared/pro-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface ProjectListProps {
   projects: Project[];
@@ -45,6 +46,14 @@ export function ProjectList({
     name: string;
   } | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  // Real-time subscription check (đồng bộ với Editor)
+  // Ưu tiên client-side check để luôn đồng bộ với DB
+  const { isPro: isClientPro, isLoading: isSubLoading } = useSubscription();
+
+  // Use client-side subscription after initial load completes
+  // This ensures dashboard syncs with database changes immediately
+  const displayIsPro = !isSubLoading ? isClientPro : subscription === "pro";
 
   const handleDeleteClick = (projectId: string, projectName: string) => {
     setProjectToDelete({ id: projectId, name: projectName });
@@ -93,7 +102,7 @@ export function ProjectList({
           <CardContent>
             <div className="text-2xl font-bold">{projects.length}</div>
             <p className="text-xs text-muted-foreground">
-              {subscription === "pro"
+              {displayIsPro
                 ? "Không giới hạn"
                 : `${projects.length}/5 dự án miễn phí`}
             </p>
@@ -103,13 +112,13 @@ export function ProjectList({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Gói Đăng Ký</CardTitle>
-            {subscription === "pro" && <ProBadge />}
+            {displayIsPro && <ProBadge />}
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2">
-              {subscription === "pro" ? "Pro" : "Miễn Phí"}
+              {displayIsPro ? "Pro" : "Miễn Phí"}
             </div>
-            {subscription === "pro" ? (
+            {displayIsPro ? (
               <p className="text-xs text-muted-foreground mt-1">
                 {subscriptionStatus.isTrial
                   ? `Trial: còn ${subscriptionStatus.daysRemaining} ngày`
@@ -151,7 +160,7 @@ export function ProjectList({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Tất Cả Dự Án</h2>
-          {subscription === "free" && (
+          {!displayIsPro && (
             <p className="text-sm text-muted-foreground">
               {projects.length} / 5 dự án
             </p>
@@ -159,7 +168,7 @@ export function ProjectList({
         </div>
 
         {/* Project Limit Warning for Free Users */}
-        {subscription === "free" && projects.length >= 4 && (
+        {!displayIsPro && projects.length >= 4 && (
           <Alert className="mb-6 border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
             <Sparkles className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-sm">

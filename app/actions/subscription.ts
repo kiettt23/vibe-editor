@@ -10,6 +10,54 @@ type ActionResult<T> =
   | { success: false; error: string; code: string };
 
 /**
+ * Get current user subscription tier (for client components)
+ * This is a lightweight version that only returns the tier
+ * Use this in useSubscription hook instead of getUserSubscription from get-subscription.ts
+ */
+export async function getUserSubscriptionTier(): Promise<SubscriptionTier> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return "free";
+    }
+
+    const { data, error } = (await supabase
+      .from("user_subscriptions")
+      .select("subscription_tier, subscription_expires_at")
+      .eq("user_id", user.id)
+      .single()) as {
+      data: {
+        subscription_tier: string;
+        subscription_expires_at: string | null;
+      } | null;
+      error: unknown;
+    };
+
+    if (error || !data) {
+      return "free";
+    }
+
+    const tier = data.subscription_tier as SubscriptionTier;
+    const expiresAt = data.subscription_expires_at;
+
+    // Check if expired
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      return "free";
+    }
+
+    return tier;
+  } catch (error) {
+    console.error("Error in getUserSubscriptionTier:", error);
+    return "free"; // Fail gracefully
+  }
+}
+
+/**
  * Upgrade user to Pro plan
  * Called after successful Stripe payment
  */
