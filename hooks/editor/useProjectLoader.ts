@@ -59,21 +59,18 @@ export function useProjectLoader({
             FilterManager.applyFilters(imageNodeInstance, canvasData.filters);
           }
 
-          // Restore transform (including flip offsets)
+          // Restore transform
           if (canvasData.transform) {
             const {
               scaleX = 1,
               scaleY = 1,
               rotation = 0,
-              offsetX = 0,
-              offsetY = 0,
             } = canvasData.transform;
 
             imageNodeInstance.scaleX(scaleX);
             imageNodeInstance.scaleY(scaleY);
             imageNodeInstance.rotation(rotation);
-            imageNodeInstance.offsetX(offsetX);
-            imageNodeInstance.offsetY(offsetY);
+            // Offset is always set to center during image load, no need to restore
 
             updateTransform(canvasData.transform, true); // skipDirty=true
             layer?.draw();

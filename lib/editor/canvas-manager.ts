@@ -73,8 +73,8 @@ export class CanvasManager {
             width = stageHeight * imageRatio;
           }
 
-          const x = (stageWidth - width) / 2;
-          const y = (stageHeight - height) / 2;
+          const x = stageWidth / 2;
+          const y = stageHeight / 2;
 
           this.imageNode = new Konva.Image({
             image: imageObj,
@@ -82,6 +82,8 @@ export class CanvasManager {
             y,
             width,
             height,
+            offsetX: width / 2,
+            offsetY: height / 2,
             draggable: false,
           });
 
@@ -168,30 +170,29 @@ export class CanvasManager {
     }
   }
 
+  /**
+   * Rotate image around its center point
+   * @param angleDelta - Angle to rotate in degrees (positive = clockwise)
+   */
+  rotateImage(angleDelta: number): void {
+    if (!this.imageNode) return;
+
+    const currentRotation = this.imageNode.rotation();
+    const newRotation = currentRotation + angleDelta;
+
+    this.imageNode.rotation(newRotation);
+    this.layer?.draw();
+  }
+
   flipImage(direction: "horizontal" | "vertical"): void {
     if (!this.imageNode) return;
 
-    const currentScaleX = this.imageNode.scaleX();
-    const currentScaleY = this.imageNode.scaleY();
-
     if (direction === "horizontal") {
-      const newScaleX = currentScaleX * -1;
-      this.imageNode.scaleX(newScaleX);
-
-      if (newScaleX < 0) {
-        this.imageNode.offsetX(this.imageNode.width());
-      } else {
-        this.imageNode.offsetX(0);
-      }
+      const currentScaleX = this.imageNode.scaleX();
+      this.imageNode.scaleX(currentScaleX * -1);
     } else {
-      const newScaleY = currentScaleY * -1;
-      this.imageNode.scaleY(newScaleY);
-
-      if (newScaleY < 0) {
-        this.imageNode.offsetY(this.imageNode.height());
-      } else {
-        this.imageNode.offsetY(0);
-      }
+      const currentScaleY = this.imageNode.scaleY();
+      this.imageNode.scaleY(currentScaleY * -1);
     }
 
     this.layer?.draw();

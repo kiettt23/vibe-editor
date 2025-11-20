@@ -356,23 +356,25 @@ export function AdjustmentsPanel({
             </TabsContent>
 
             {/* Presets Tab */}
-            <TabsContent value="presets" className="px-5 py-4 space-y-2">
-              {FILTER_PRESETS.map((preset) => (
-                <Button
-                  key={preset.name}
-                  variant="outline"
-                  className="w-full justify-start h-auto flex-col items-start py-3 px-4 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
-                  onClick={() => onApplyPreset(preset.name)}
-                  disabled={!isImageLoaded}
-                >
-                  <span className="text-xs font-semibold text-foreground">
-                    {preset.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground mt-0.5">
-                    {preset.description}
-                  </span>
-                </Button>
-              ))}
+            <TabsContent value="presets" className="px-5 py-4">
+              <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
+                {FILTER_PRESETS.map((preset) => (
+                  <Button
+                    key={preset.name}
+                    variant="outline"
+                    className="w-full justify-start h-auto flex-col items-start py-3 px-4 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
+                    onClick={() => onApplyPreset(preset.name)}
+                    disabled={!isImageLoaded}
+                  >
+                    <span className="text-xs font-semibold text-foreground">
+                      {preset.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-0.5">
+                      {preset.description}
+                    </span>
+                  </Button>
+                ))}
+              </div>
             </TabsContent>
           </Tabs>
         </ScrollArea>

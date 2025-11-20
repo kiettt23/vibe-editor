@@ -110,8 +110,7 @@ export function useImageUpload({
                 rotation: imageNodeInstance.rotation(),
                 x: imageNodeInstance.x(),
                 y: imageNodeInstance.y(),
-                offsetX: imageNodeInstance.offsetX(),
-                offsetY: imageNodeInstance.offsetY(),
+                // offsetX/Y are always center, no need to save
               },
               width: stage.width(),
               height: stage.height(),

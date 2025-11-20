@@ -34,8 +34,7 @@ export function useEditorSave({ projectId }: UseEditorSaveProps) {
         rotation: imageNode.rotation(),
         x: imageNode.x(),
         y: imageNode.y(),
-        offsetX: imageNode.offsetX(),
-        offsetY: imageNode.offsetY(),
+        // offsetX/Y are always center, no need to save
       },
       width: stage.width(),
       height: stage.height(),

@@ -144,10 +144,8 @@ export function EditorWorkspace({
       return;
     }
 
-    const currentRotation = imageNode.rotation();
-    const newRotation = currentRotation + angle;
-    imageNode.rotation(newRotation);
-    layer?.draw();
+    const canvasManager = getCanvasManager();
+    canvasManager.rotateImage(angle);
     setDirty(true);
     toast.success(`Đã xoay ${angle > 0 ? "+" : ""}${angle}°`);
   };
@@ -164,8 +162,9 @@ export function EditorWorkspace({
     imageNode.scaleX(1);
     imageNode.scaleY(1);
     imageNode.rotation(0);
-    imageNode.offsetX(0);
-    imageNode.offsetY(0);
+    // Keep offset at center (set during image load)
+    imageNode.offsetX(imageNode.width() / 2);
+    imageNode.offsetY(imageNode.height() / 2);
 
     layer?.draw();
     setDirty(true);
