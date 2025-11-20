@@ -55,15 +55,14 @@ export default function Pricing() {
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-2xl space-y-4 text-center mb-12">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Bảng Giá Đơn Giản, Minh Bạch
+            Trải nghiệm tốt nhất
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Chọn gói phù hợp với bạn. Bắt đầu miễn phí, nâng cấp khi cần thêm
-            tính năng.
+          <p className="text-base sm:text-lg text-muted-foreground">
+            Bắt đầu miễn phí, nâng cấp khi cần thêm tính năng
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto items-stretch">
           {plans.map((plan) => (
             <Card
               key={plan.name}

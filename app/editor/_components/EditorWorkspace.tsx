@@ -322,6 +322,7 @@ export function EditorWorkspace({
               ? "presets"
               : "filters"
           }
+          onTabChange={(tab) => setActiveTab(tab)}
         />
       </div>
 

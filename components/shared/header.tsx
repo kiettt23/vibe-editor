@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, Palette, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,9 +20,9 @@ import { logoutAction } from "@/app/actions/auth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const menuItems = [
-  { name: "Tính năng", href: "/features" },
-  { name: "Bảng giá", href: "/pricing" },
   { name: "Giới thiệu", href: "/" },
+  { name: "Tính năng", href: "/features" },
+  { name: "Pro", href: "/pricing" },
 ];
 
 export const HeroHeader = () => {
@@ -72,7 +72,7 @@ export const HeroHeader = () => {
               "bg-background/50 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5"
           )}
         >
-          <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
+          <div className="relative flex flex-wrap items-center justify-between gap-4 py-2 sm:py-2.5 lg:gap-0 lg:py-3">
             <div className="flex w-full justify-between lg:w-auto">
               <Link
                 href="/"
@@ -93,14 +93,15 @@ export const HeroHeader = () => {
             </div>
 
             <div className="absolute inset-0 m-auto hidden size-fit lg:block">
-              <ul className="flex gap-8 text-base font-medium">
+              <ul className="flex gap-8 text-sm font-medium">
                 {menuItems.map((item, index) => (
                   <li key={index}>
                     <Link
                       href={item.href}
-                      className="text-muted-foreground hover:text-primary transition-colors duration-150"
+                      className="text-muted-foreground hover:text-foreground transition-colors duration-200 relative group"
                     >
                       <span>{item.name}</span>
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-200 group-hover:w-full" />
                     </Link>
                   </li>
                 ))}
@@ -172,7 +173,8 @@ export const HeroHeader = () => {
                   <Button
                     asChild
                     size="default"
-                    className="text-base font-medium"
+                    variant="outline"
+                    className="text-sm font-medium"
                   >
                     <Link href="/dashboard">
                       <span>Dashboard</span>
@@ -207,20 +209,20 @@ export const HeroHeader = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link href="/dashboard" className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
                           <span>Dashboard</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/editor" className="cursor-pointer">
-                          <span className="mr-2">🎨</span>
+                          <Palette className="mr-2 h-4 w-4" />
                           <span>Editor</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="cursor-pointer text-red-600 focus:text-red-600"
+                        className="cursor-pointer text-destructive focus:text-destructive"
                       >
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Đăng xuất</span>

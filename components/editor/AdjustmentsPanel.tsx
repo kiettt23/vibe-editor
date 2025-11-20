@@ -37,6 +37,7 @@ interface AdjustmentsPanelProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   activeTab?: "filters" | "transform" | "presets";
+  onTabChange?: (tab: "filters" | "transform" | "presets") => void;
 }
 
 export function AdjustmentsPanel({
@@ -50,6 +51,7 @@ export function AdjustmentsPanel({
   isCollapsed = false,
   onToggleCollapse,
   activeTab = "filters",
+  onTabChange,
 }: AdjustmentsPanelProps) {
   // Collapsed state
   if (isCollapsed) {
@@ -64,11 +66,6 @@ export function AdjustmentsPanel({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-        </div>
-        <div className="flex-1 flex items-center justify-center py-4 overflow-hidden">
-          <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap [writing-mode:vertical-rl] transform rotate-180">
-            Adjustments
-          </p>
         </div>
       </div>
     );
@@ -102,6 +99,19 @@ export function AdjustmentsPanel({
           <ScrollArea className="h-full">
             <Tabs
               value={activeTab === "filters" ? "adjustments" : activeTab}
+              onValueChange={(value) => {
+                if (onTabChange) {
+                  const tabMap: Record<
+                    string,
+                    "filters" | "transform" | "presets"
+                  > = {
+                    adjustments: "filters",
+                    transform: "transform",
+                    presets: "presets",
+                  };
+                  onTabChange(tabMap[value] || "filters");
+                }
+              }}
               className="w-full"
             >
               <div className="px-5 my-3">
@@ -339,7 +349,7 @@ export function AdjustmentsPanel({
 
               {/* Presets Tab */}
               <TabsContent value="presets" className="px-5 py-4">
-                <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
+                <div className="space-y-2">
                   {FILTER_PRESETS.map((preset) => (
                     <Button
                       key={preset.name}

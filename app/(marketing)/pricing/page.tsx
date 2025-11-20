@@ -9,6 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Check } from "lucide-react";
 import Link from "next/link";
 import { HeroHeader } from "@/components/shared/header";
@@ -62,23 +68,22 @@ export default function PricingPage() {
       <HeroHeader />
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 pt-32 text-center">
-        <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-          Bảng Giá Đơn Giản, Minh Bạch
+      <section className="container mx-auto px-4 py-16 pt-28 text-center">
+        <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+          Trải nghiệm tốt nhất
         </h1>
-        <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-          Chọn gói phù hợp với bạn. Bắt đầu miễn phí, nâng cấp khi cần thêm tính
-          năng.
+        <p className="mx-auto mb-6 max-w-2xl text-base sm:text-lg text-muted-foreground">
+          Bắt đầu miễn phí, nâng cấp khi cần thêm tính năng
         </p>
       </section>
 
       {/* Pricing Cards */}
-      <section className="container mx-auto px-4 pb-20">
-        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
+      <section className="container mx-auto px-4 pb-16">
+        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2 items-stretch">
           {plans.map((plan) => (
             <Card
               key={plan.name}
-              className={`relative ${
+              className={`relative flex flex-col ${
                 plan.popular ? "border-primary shadow-lg shadow-primary/10" : ""
               }`}
             >
@@ -101,7 +106,7 @@ export default function PricingPage() {
                 </div>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="flex-1">
                 <ul className="space-y-3">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-3">
@@ -112,7 +117,7 @@ export default function PricingPage() {
                 </ul>
               </CardContent>
 
-              <CardFooter>
+              <CardFooter className="mt-auto">
                 <Button
                   asChild
                   className="w-full"
@@ -128,13 +133,13 @@ export default function PricingPage() {
       </section>
 
       {/* Comparison Table */}
-      <section className="container mx-auto px-4 pb-20">
+      <section className="container mx-auto px-4 pb-16">
         <div className="mx-auto max-w-4xl">
-          <h2 className="mb-8 text-center text-3xl font-bold">
+          <h2 className="mb-6 text-center text-2xl font-bold">
             So sánh chi tiết
           </h2>
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -221,61 +226,64 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="container mx-auto px-4 pb-20">
+      <section className="container mx-auto px-4 pb-16">
         <div className="mx-auto max-w-3xl">
-          <h2 className="mb-8 text-center text-3xl font-bold">
+          <h2 className="mb-6 text-center text-2xl font-bold">
             Câu Hỏi Thường Gặp
           </h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="mb-2 text-lg font-semibold">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger className="text-left">
                 Tôi có thể hủy đăng ký bất cứ lúc nào không?
-              </h3>
-              <p className="text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
                 Có! Bạn có thể hủy đăng ký Pro bất cứ lúc nào. Bạn vẫn sẽ được
                 sử dụng cho đến hết kỳ thanh toán hiện tại.
-              </p>
-            </div>
-            <div>
-              <h3 className="mb-2 text-lg font-semibold">
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-2">
+              <AccordionTrigger className="text-left">
                 Các phương thức thanh toán nào được chấp nhận?
-              </h3>
-              <p className="text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
                 Chúng tôi chấp nhận tất cả các thẻ tín dụng lớn (Visa,
                 Mastercard, American Express) thông qua hệ thống thanh toán
                 Stripe bảo mật.
-              </p>
-            </div>
-            <div>
-              <h3 className="mb-2 text-lg font-semibold">
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-3">
+              <AccordionTrigger className="text-left">
                 Có hoàn tiền không?
-              </h3>
-              <p className="text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
                 Chúng tôi có chính sách hoàn tiền trong 14 ngày. Nếu không hài
                 lòng, hãy liên hệ với chúng tôi để được hoàn tiền đầy đủ.
-              </p>
-            </div>
-            <div>
-              <h3 className="mb-2 text-lg font-semibold">
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4">
+              <AccordionTrigger className="text-left">
                 Điều gì xảy ra với dự án của tôi nếu tôi hạ cấp?
-              </h3>
-              <p className="text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
                 Dự án của bạn vẫn an toàn! Nếu bạn vượt quá giới hạn gói miễn
                 phí (5 dự án), bạn sẽ không mất chúng. Bạn chỉ không thể tạo dự
                 án mới cho đến khi xóa bớt hoặc nâng cấp lại.
-              </p>
-            </div>
-          </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="border-t bg-muted/30">
-        <div className="container mx-auto px-4 py-20 text-center">
+        <div className="container mx-auto px-4 py-16 text-center">
           <h2 className="mb-4 text-3xl font-bold">Sẵn sàng bắt đầu?</h2>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-            Tham gia cùng hàng ngàn người sáng tạo đang sử dụng VibeEditor để tạo
-            ra những hình ảnh tuyệt đẹp.
+            Tham gia cùng hàng ngàn người sáng tạo đang sử dụng VibeEditor để
+            tạo ra những hình ảnh tuyệt đẹp.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Button asChild size="lg">

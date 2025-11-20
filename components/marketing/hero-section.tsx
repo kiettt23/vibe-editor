@@ -28,7 +28,7 @@ export default function HeroSection() {
                 <span className="text-xs font-medium">Photo Editor Online</span>
               </div>
 
-              <h1 className="text-balance text-4xl font-bold md:text-6xl mb-6 leading-tight pointer-events-none">
+              <h1 className="text-balance text-3xl font-bold sm:text-4xl md:text-5xl lg:text-6xl mb-4 sm:mb-6 leading-tight pointer-events-none">
                 Chỉnh sửa ảnh online
                 <br />
                 <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -36,13 +36,13 @@ export default function HeroSection() {
                 </span>
               </h1>
 
-              <p className="mx-auto max-w-xl text-pretty text-base text-muted-foreground mb-10 leading-relaxed pointer-events-none">
+              <p className="mx-auto max-w-xl text-pretty text-sm sm:text-base text-muted-foreground mb-8 sm:mb-10 leading-relaxed pointer-events-none px-4 sm:px-0">
                 Không cần cài đặt, không cần đăng ký. Chỉ cần kéo thả ảnh và bắt
                 đầu sáng tạo. Công cụ chỉnh sửa ảnh chuyên nghiệp chạy ngay trên
                 trình duyệt.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12 pointer-events-auto">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8 sm:mb-12 pointer-events-auto">
                 <Button
                   asChild
                   size="default"
@@ -63,17 +63,17 @@ export default function HeroSection() {
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-6 justify-center items-center text-sm text-muted-foreground pointer-events-none">
-                <div className="flex items-center gap-2">
-                  <Upload className="h-3.5 w-3.5 text-primary" />
+              <div className="flex flex-wrap gap-4 sm:gap-6 justify-center items-center text-xs sm:text-sm text-muted-foreground pointer-events-none">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Upload className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
                   <span>Drag & Drop</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
                   <span>AI Powered</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Wand2 className="h-3.5 w-3.5 text-primary" />
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Wand2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
                   <span>Professional Filters</span>
                 </div>
               </div>

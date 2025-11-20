@@ -190,15 +190,15 @@ export function EditorHeader({
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem onClick={() => onExport("png")}>
                 <Download className="mr-2 h-4 w-4" />
-                <span className="text-xs">Export PNG</span>
+                <span className="text-xs">PNG</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onExport("jpeg")}>
                 <Download className="mr-2 h-4 w-4" />
-                <span className="text-xs">Export JPG</span>
+                <span className="text-xs">JPG</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onExport("webp")}>
                 <Download className="mr-2 h-4 w-4" />
-                <span className="text-xs">Export WebP</span>
+                <span className="text-xs">WebP</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
