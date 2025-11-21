@@ -30,7 +30,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "199.000đ",
+    price: "99.000đ",
     period: "/tháng",
     description: "Dành cho chuyên gia cần nhiều tính năng hơn",
     features: [
@@ -44,7 +44,7 @@ const plans = [
       "Tùy chỉnh thương hiệu",
     ],
     cta: "Nâng cấp Pro",
-    href: "/signup",
+    href: "/pricing",
     popular: true,
   },
 ];
