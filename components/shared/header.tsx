@@ -2,23 +2,14 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { Menu, X, LogOut, Palette, LayoutDashboard } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { logoutAction } from "@/app/actions/auth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useSubscription } from "@/hooks/useSubscription";
+import { AccountSwitcher } from "@/components/shared/account-switcher";
 
 const menuItems = [
   { name: "Giới thiệu", href: "/" },
@@ -63,9 +54,6 @@ export const HeroHeader = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    await logoutAction();
-  };
   return (
     <header>
       <nav
@@ -188,54 +176,11 @@ export const HeroHeader = () => {
                     </Link>
                   </Button>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="relative h-9 w-9 rounded-full"
-                      >
-                        <Avatar className="h-9 w-9">
-                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                            {user.email?.charAt(0).toUpperCase() || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel>
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">
-                            {user.user_metadata?.full_name || "User"}
-                          </p>
-                          <p className="text-xs leading-none text-muted-foreground">
-                            {user.email}
-                          </p>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/dashboard" className="cursor-pointer">
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          <span>Dashboard</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/editor" className="cursor-pointer">
-                          <Palette className="mr-2 h-4 w-4" />
-                          <span>Editor</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={handleLogout}
-                        className="cursor-pointer text-destructive focus:text-destructive"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Đăng xuất</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <AccountSwitcher
+                    userEmail={user.email || undefined}
+                    userName={user.user_metadata?.full_name}
+                    avatarUrl={user.user_metadata?.avatar_url}
+                  />
                 </div>
               )}
             </div>

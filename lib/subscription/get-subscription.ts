@@ -76,18 +76,23 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
       isActive: false,
       isTrial: false,
       daysRemaining: null,
+      willCancelAtPeriodEnd: false,
     };
   }
 
   const { data } = (await supabase
     .from("user_subscriptions")
-    .select("subscription_tier, subscription_expires_at, created_at")
+    .select(
+      "subscription_tier, subscription_expires_at, created_at, cancel_at_period_end"
+    )
     .eq("user_id", user.id)
     .single()) as {
-    data: Pick<
-      UserSubscription,
-      "subscription_tier" | "subscription_expires_at" | "created_at"
-    > | null;
+    data:
+      | (Pick<
+          UserSubscription,
+          "subscription_tier" | "subscription_expires_at" | "created_at"
+        > & { cancel_at_period_end?: boolean })
+      | null;
   };
 
   if (!data) {
@@ -97,6 +102,7 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
       isActive: false,
       isTrial: false,
       daysRemaining: null,
+      willCancelAtPeriodEnd: false,
     };
   }
 
@@ -129,6 +135,7 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
     isActive,
     isTrial,
     daysRemaining,
+    willCancelAtPeriodEnd: data.cancel_at_period_end || false,
   };
 }
 

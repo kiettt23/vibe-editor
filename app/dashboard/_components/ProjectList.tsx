@@ -57,6 +57,9 @@ export function ProjectList({
   // This ensures dashboard syncs with database changes immediately
   const displayIsPro = !isSubLoading ? isClientPro : subscription === "pro";
 
+  // DEBUG: Log subscription status
+  console.log("[Dashboard] Subscription Status:", subscriptionStatus);
+
   const handleDeleteClick = (projectId: string, projectName: string) => {
     setProjectToDelete({ id: projectId, name: projectName });
     setDeleteDialogOpen(true);
@@ -122,13 +125,24 @@ export function ProjectList({
             </div>
             {displayIsPro ? (
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  {subscriptionStatus.isTrial
-                    ? `Trial: còn ${subscriptionStatus.daysRemaining} ngày`
-                    : subscriptionStatus.daysRemaining !== null
-                    ? `Còn ${subscriptionStatus.daysRemaining} ngày`
-                    : "Không giới hạn"}
-                </p>
+                {subscriptionStatus.willCancelAtPeriodEnd ? (
+                  <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">
+                    ⚠️ Gói sẽ hết hạn vào{" "}
+                    {subscriptionStatus.expiresAt
+                      ? new Date(
+                          subscriptionStatus.expiresAt
+                        ).toLocaleDateString("vi-VN")
+                      : ""}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {subscriptionStatus.isTrial
+                      ? `Trial: còn ${subscriptionStatus.daysRemaining} ngày`
+                      : subscriptionStatus.daysRemaining !== null
+                      ? `Còn ${subscriptionStatus.daysRemaining} ngày`
+                      : "Không giới hạn"}
+                  </p>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -137,7 +151,9 @@ export function ProjectList({
                   disabled={isPortalLoading}
                 >
                   <Settings className="mr-1.5 h-3 w-3" />
-                  Quản lý gói
+                  {subscriptionStatus.willCancelAtPeriodEnd
+                    ? "Gia hạn ngay"
+                    : "Quản lý gói"}
                 </Button>
               </div>
             ) : (

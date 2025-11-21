@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
 import { stripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe/config";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   calculateExpiryDate,
   getProductByPriceId,
 } from "@/lib/stripe/products";
+
+// Extended Stripe subscription type with missing fields
+interface StripeSubscriptionWithPeriod extends Stripe.Subscription {
+  current_period_end?: number;
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -126,9 +131,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const product = getProductByPriceId(priceId);
   const expiryDate = calculateExpiryDate(product?.interval || "month");
 
-  // Update user subscription in database
-  const supabase = await createClient();
-  const { error } = await supabase
+  // Update user subscription in database (using admin client to bypass RLS)
+  const supabase = createAdminClient();
+
+  // Update user_subscriptions (main table)
+  const { error: subError } = await supabase
     .from("user_subscriptions")
     // @ts-expect-error: Supabase types not fully generated yet
     .update({
@@ -137,13 +144,30 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       stripe_customer_id: session.customer as string,
       stripe_subscription_id: subscriptionId,
       stripe_price_id: priceId,
+      ai_quota_limit: 100, // Pro quota
+      cancel_at_period_end: false, // New subscription, not cancelling
     })
     .eq("user_id", userId);
 
-  if (error) {
-    console.error("[Webhook] Failed to update subscription:", error);
+  // Update user_profiles (legacy field for backward compatibility)
+  const { error: profileError } = await supabase
+    .from("user_profiles")
+    // @ts-expect-error: Supabase types not fully generated yet
+    .update({
+      subscription: "pro",
+      ai_quota_limit: 100, // Sync quota
+    })
+    .eq("user_id", userId);
+
+  if (subError || profileError) {
+    console.error(
+      "[Webhook] Failed to update subscription:",
+      subError || profileError
+    );
   } else {
-    console.log(`[Webhook] User ${userId} upgraded to Pro`);
+    console.log(
+      `[Webhook] User ${userId} upgraded to Pro (both tables synced)`
+    );
   }
 }
 
@@ -168,14 +192,119 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
   console.log(`[Webhook] Subscription updated for user: ${userId}`);
+  console.log(
+    `[Webhook] cancel_at_period_end: ${subscription.cancel_at_period_end}`
+  );
+  console.log(
+    `[Webhook] current_period_end: ${
+      (subscription as StripeSubscriptionWithPeriod).current_period_end
+    }`
+  );
+  console.log(`[Webhook] status: ${subscription.status}`);
 
-  const priceId = subscription.items.data[0]?.price.id;
+  // Check if subscription is being cancelled at period end
+  if (subscription.cancel_at_period_end) {
+    console.log(
+      `[Webhook] Subscription will be cancelled at period end for user: ${userId}`
+    );
 
-  // @ts-expect-error: Stripe type issue with current_period_end
-  const periodEnd = subscription.current_period_end;
+    const supabase = createAdminClient();
+
+    // Get current_period_end from subscription event (if available)
+    const periodEnd = (subscription as StripeSubscriptionWithPeriod)
+      .current_period_end;
+
+    // Build update object - always set cancel flag
+    const updateData: {
+      cancel_at_period_end: boolean;
+      subscription_expires_at?: string;
+    } = {
+      cancel_at_period_end: true, // Flag for UI warning
+    };
+
+    // Only update expiry date if we have current_period_end from event
+    if (periodEnd && typeof periodEnd === "number") {
+      const expiryDate = new Date(periodEnd * 1000);
+      updateData.subscription_expires_at = expiryDate.toISOString();
+      console.log(
+        `[Webhook] Will update expiry to: ${expiryDate.toISOString()}`
+      );
+    } else {
+      console.log(
+        `[Webhook] No current_period_end in event, keeping existing expiry date`
+      );
+    }
+
+    // Mark as cancelling - subscription still active until period end
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      // @ts-expect-error: Supabase types not fully generated yet
+      .update(updateData)
+      .eq("user_id", userId)
+      .select();
+
+    if (error) {
+      console.error("[Webhook] Failed to set cancel_at_period_end:", error);
+    } else {
+      console.log(
+        `[Webhook] ✅ Set cancel_at_period_end=true for user ${userId}`
+      );
+      console.log(`[Webhook] Updated rows:`, data);
+    }
+    return;
+  }
+
+  // Check if subscription was just cancelled (status = cancelled)
+  if (subscription.status === "canceled") {
+    console.log(`[Webhook] Subscription cancelled for user: ${userId}`);
+
+    const supabase = createAdminClient();
+
+    // Update user_subscriptions
+    const { error: subError } = await supabase
+      .from("user_subscriptions")
+      // @ts-expect-error: Supabase types not fully generated yet
+      .update({
+        subscription_tier: "free",
+        subscription_expires_at: null,
+        stripe_subscription_id: null,
+        stripe_price_id: null,
+        ai_quota_limit: 5,
+      })
+      .eq("user_id", userId);
+
+    // Update user_profiles (sync legacy field)
+    const { error: profileError } = await supabase
+      .from("user_profiles")
+      // @ts-expect-error: Supabase types not fully generated yet
+      .update({
+        subscription: "free",
+        ai_quota_limit: 5,
+      })
+      .eq("user_id", userId);
+
+    if (subError || profileError) {
+      console.error(
+        "[Webhook] Failed to downgrade user:",
+        subError || profileError
+      );
+    } else {
+      console.log(
+        `[Webhook] User ${userId} downgraded to Free (both tables synced)`
+      );
+    }
+    return;
+  }
+
+  // Handle regular subscription updates (e.g., plan change, renewal)
+  // Skip if subscription was just created (handled in checkout.session.completed)
+  const periodEnd = (subscription as StripeSubscriptionWithPeriod)
+    .current_period_end;
 
   if (!periodEnd || typeof periodEnd !== "number") {
-    console.error("[Webhook] Invalid current_period_end:", periodEnd);
+    console.log(
+      "[Webhook] No current_period_end - subscription may be new, skipping update"
+    );
     return;
   }
 
@@ -186,7 +315,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     return;
   }
 
-  const supabase = await createClient();
+  const priceId = subscription.items.data[0]?.price.id;
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("user_subscriptions")
     // @ts-expect-error: Supabase types not fully generated yet
@@ -198,6 +328,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   if (error) {
     console.error("[Webhook] Failed to update subscription:", error);
+  } else {
+    console.log(`[Webhook] ✅ Subscription period updated for user: ${userId}`);
   }
 }
 
@@ -211,9 +343,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   console.log(`[Webhook] Subscription deleted for user: ${userId}`);
 
-  // Downgrade to free
-  const supabase = await createClient();
-  const { error } = await supabase
+  // Downgrade to free (using admin client to bypass RLS)
+  const supabase = createAdminClient();
+
+  // Update user_subscriptions (main table)
+  const { error: subError } = await supabase
     .from("user_subscriptions")
     // @ts-expect-error: Supabase types not fully generated yet
     .update({
@@ -221,13 +355,30 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       subscription_expires_at: null,
       stripe_subscription_id: null,
       stripe_price_id: null,
+      ai_quota_limit: 5, // Free quota
+      cancel_at_period_end: false, // Clear cancel flag
     })
     .eq("user_id", userId);
 
-  if (error) {
-    console.error("[Webhook] Failed to downgrade user:", error);
+  // Update user_profiles (legacy field for backward compatibility)
+  const { error: profileError } = await supabase
+    .from("user_profiles")
+    // @ts-expect-error: Supabase types not fully generated yet
+    .update({
+      subscription: "free",
+      ai_quota_limit: 5, // Sync quota
+    })
+    .eq("user_id", userId);
+
+  if (subError || profileError) {
+    console.error(
+      "[Webhook] Failed to downgrade user:",
+      subError || profileError
+    );
   } else {
-    console.log(`[Webhook] User ${userId} downgraded to Free`);
+    console.log(
+      `[Webhook] User ${userId} downgraded to Free (both tables synced)`
+    );
   }
 }
 
@@ -249,10 +400,12 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 
   // Extend subscription
-  // @ts-expect-error: Stripe type issue with current_period_end
-  const expiryDate = new Date(subscription.current_period_end * 1000);
+  const periodEnd = (subscription as StripeSubscriptionWithPeriod)
+    .current_period_end;
+  if (!periodEnd) return;
+  const expiryDate = new Date(periodEnd * 1000);
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase
     .from("user_subscriptions")
     // @ts-expect-error: Supabase types not fully generated yet

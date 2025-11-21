@@ -25,8 +25,12 @@ export async function POST(request: NextRequest) {
     };
 
     if (!subscription?.stripe_customer_id) {
+      console.log("[Portal] No Stripe customer ID for user:", user.id);
       return NextResponse.json(
-        { error: "No active subscription found" },
+        {
+          error:
+            "Bạn chưa có gói trả phí. Vui lòng nâng cấp tại trang Pricing.",
+        },
         { status: 404 }
       );
     }

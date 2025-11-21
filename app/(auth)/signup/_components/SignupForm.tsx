@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,9 @@ import {
 import { toast } from "sonner";
 
 export function SignupForm() {
+  const searchParams = useSearchParams();
+  const wantTrial = searchParams.get("trial") === "true";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -55,6 +59,12 @@ export function SignupForm() {
 
     try {
       const formData = new FormData(e.currentTarget);
+
+      // Add trial flag if present in URL
+      if (wantTrial) {
+        formData.append("wantTrial", "true");
+      }
+
       const result = await signupWithEmailAction(formData);
 
       if (result?.error) {
@@ -64,7 +74,11 @@ export function SignupForm() {
       }
 
       // Success - will redirect via Server Action
-      toast.success("Đăng ký thành công!");
+      if (wantTrial) {
+        toast.success("Đăng ký thành công! Đang kích hoạt gói dùng thử...");
+      } else {
+        toast.success("Đăng ký thành công!");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng ký thất bại");
       setIsLoading(false);
@@ -104,9 +118,19 @@ export function SignupForm() {
           <div>
             <CardTitle className="text-2xl">Tạo Tài Khoản</CardTitle>
             <CardDescription>
-              Đăng ký để sử dụng đầy đủ tính năng của VibeEditor
+              {wantTrial
+                ? "Đăng ký để nhận 3 ngày dùng thử Pro miễn phí"
+                : "Đăng ký để sử dụng đầy đủ tính năng của VibeEditor"}
             </CardDescription>
           </div>
+          {wantTrial && (
+            <Alert className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+              <AlertDescription className="text-sm text-purple-900">
+                🎁 Bạn sẽ được trải nghiệm{" "}
+                <strong>dùng thử Pro 3 ngày miễn phí</strong>
+              </AlertDescription>
+            </Alert>
+          )}
         </CardHeader>
 
         <CardContent className="space-y-4">

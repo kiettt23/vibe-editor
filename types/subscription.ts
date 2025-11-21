@@ -16,6 +16,7 @@ export interface SubscriptionStatus {
   isActive: boolean;
   isTrial: boolean;
   daysRemaining: number | null;
+  willCancelAtPeriodEnd: boolean; // User has cancelled but subscription still active
 }
 
 export const SUBSCRIPTION_CONFIG = {

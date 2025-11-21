@@ -1,24 +1,30 @@
 -- ============================================
--- QUICK CLEAN DEPLOYMENT
--- Run this if you want to start fresh (⚠️  Deletes all data!)
+-- CLEAN ALL DATA - FRESH START
+-- ⚠️  WARNING: Deletes ALL user data and test accounts
 -- ============================================
 
--- 1. Drop all tables
-DROP TABLE IF EXISTS public.preset_filters CASCADE;
-DROP TABLE IF EXISTS public.usage_logs CASCADE;
-DROP TABLE IF EXISTS public.user_subscriptions CASCADE;
-DROP TABLE IF EXISTS public.user_profiles CASCADE;
-DROP TABLE IF EXISTS public.projects CASCADE;
+-- Step 1: Delete all rows from tables (keeps schema)
+DELETE FROM public.preset_filters;
+DELETE FROM public.usage_logs;
+DELETE FROM public.projects;
+DELETE FROM public.user_subscriptions;
+DELETE FROM public.user_profiles;
 
--- 2. Drop all triggers/functions
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
-DROP FUNCTION IF EXISTS public.handle_new_user_subscription() CASCADE;
-DROP FUNCTION IF EXISTS public.handle_new_user_signup() CASCADE;
+-- Step 2: Delete all auth users (CASCADE will clean related data)
+-- ⚠️  This removes ALL accounts including OAuth
+DELETE FROM auth.users;
+
+-- Step 3: Reset sequences if any
+-- (Add ALTER SEQUENCE ... RESTART WITH 1 if you have auto-increment columns)
 
 -- Success message
 DO $$
 BEGIN
-  RAISE NOTICE '✅ All old schema dropped. Ready for fresh migration.';
-  RAISE NOTICE 'Next: Run supabase/migrations/20251121000000_complete_schema.sql';
+  RAISE NOTICE '✅ All data cleaned!';
+  RAISE NOTICE 'Tables: projects, user_subscriptions, user_profiles, auth.users';
+  RAISE NOTICE 'Next steps:';
+  RAISE NOTICE '1. Run migration: 20251121000004_change_signup_to_free.sql';
+  RAISE NOTICE '2. Test email signup';
+  RAISE NOTICE '3. Test OAuth Google signup';
+  RAISE NOTICE '4. Test Stripe checkout + cancel flow';
 END $$;

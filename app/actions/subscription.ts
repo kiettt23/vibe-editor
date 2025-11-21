@@ -188,6 +188,114 @@ export async function assignTrialToNewUser(
 }
 
 /**
+ * Activate free 3-day Pro trial for user
+ * Called when user clicks "Dùng thử 3 ngày" on pricing page
+ * Can only be used once per user
+ */
+export async function activateFreeTrial(): Promise<ActionResult<void>> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return {
+        success: false,
+        error: "Vui lòng đăng nhập trước",
+        code: "UNAUTHORIZED",
+      };
+    }
+
+    // Check if user already has or had Pro subscription
+    const { data: existingSub } = (await supabase
+      .from("user_subscriptions")
+      .select("subscription_tier, stripe_customer_id")
+      .eq("user_id", user.id)
+      .single()) as {
+      data: {
+        subscription_tier: string;
+        stripe_customer_id: string | null;
+      } | null;
+      error: unknown;
+    };
+
+    if (!existingSub) {
+      return {
+        success: false,
+        error: "Không tìm thấy thông tin tài khoản",
+        code: "NOT_FOUND",
+      };
+    }
+
+    // Check if user already has Pro (paid or trial)
+    if (existingSub.subscription_tier === "pro") {
+      return {
+        success: false,
+        error: "Bạn đã có gói Pro rồi",
+        code: "ALREADY_PRO",
+      };
+    }
+
+    // Check if user already used trial (has stripe_customer_id = trial used before)
+    // Note: We can add a separate "trial_used" boolean field later if needed
+    if (existingSub.stripe_customer_id !== null) {
+      return {
+        success: false,
+        error: "Bạn đã sử dụng gói dùng thử rồi",
+        code: "TRIAL_USED",
+      };
+    }
+
+    // Upgrade to Pro trial for 3 days
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 3);
+
+    const { error: updateError } = await supabase
+      .from("user_subscriptions")
+      // @ts-expect-error: Supabase types not fully generated yet
+      .update({
+        subscription_tier: "pro",
+        subscription_expires_at: expiryDate.toISOString(),
+        ai_quota_limit: 100, // Pro quota
+      })
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      console.error("Failed to activate trial:", updateError);
+      return {
+        success: false,
+        error: "Không thể kích hoạt gói dùng thử",
+        code: "ACTIVATION_FAILED",
+      };
+    }
+
+    // Also sync user_profiles (legacy field)
+    await supabase
+      .from("user_profiles")
+      // @ts-expect-error: Supabase types not fully generated yet
+      .update({
+        subscription: "pro",
+        ai_quota_limit: 100,
+      })
+      .eq("user_id", user.id);
+
+    revalidatePath("/dashboard");
+    revalidatePath("/pricing");
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Unexpected error in activateFreeTrial:", error);
+    return {
+      success: false,
+      error: "Đã có lỗi xảy ra",
+      code: "UNKNOWN_ERROR",
+    };
+  }
+}
+
+/**
  * Get current user subscription (client-safe)
  */
 export async function getCurrentUserSubscription(): Promise<

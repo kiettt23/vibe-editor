@@ -32,6 +32,7 @@ export async function signupWithEmailAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const fullName = formData.get("fullName") as string;
+  const wantTrial = formData.get("wantTrial") as string; // "true" if user wants trial
 
   if (!email || !password) {
     return { error: "Email và mật khẩu là bắt buộc" };
@@ -57,11 +58,16 @@ export async function signupWithEmailAction(formData: FormData) {
     return { error: "Email đã được sử dụng" };
   }
 
-  // Trial is auto-assigned by database trigger
-  // No need to manually call assignTrialToNewUser
+  // Default signup creates Free tier (via trigger)
+  // If user wants trial, redirect to dashboard with trial param
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+
+  if (wantTrial === "true") {
+    redirect("/dashboard?trial=true");
+  } else {
+    redirect("/dashboard");
+  }
 }
 
 export async function loginWithMagicLinkAction(formData: FormData) {

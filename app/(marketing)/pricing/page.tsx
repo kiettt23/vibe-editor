@@ -18,17 +18,20 @@ import { ProBadge } from "@/components/shared/pro-badge";
 import { useCheckout } from "@/hooks/useCheckout";
 import { STRIPE_PRODUCTS } from "@/lib/stripe/products";
 import { cn } from "@/lib/utils";
+import { activateFreeTrial } from "@/app/actions/subscription";
+import { useRouter } from "next/navigation";
+import { toastSuccess, toastError } from "@/lib/toast";
 
 type BillingInterval = "monthly" | "yearly";
 
-const freeFeatures = [
-  "Dùng thử Pro 3 ngày khi đăng ký",
-  "Lưu tối đa 5 dự án",
-  "Filters cơ bản (Brightness, Contrast, Blur)",
-  "3 preset filters (Original, Vintage, B&W)",
-  "Transform tools (Flip, Rotate)",
-  "Export PNG (2x resolution)",
-  "Có watermark khi export",
+const trialFeatures = [
+  "✨ 3 ngày dùng thử MIỄN PHÍ",
+  "Dự án không giới hạn",
+  "TẤT CẢ filters nâng cao",
+  "TẤT CẢ 10 preset filters",
+  "Không có watermark",
+  "Export tất cả định dạng",
+  "Tất cả tính năng Pro đầy đủ",
 ];
 
 const proFeatures = [
@@ -47,9 +50,46 @@ export default function PricingPage() {
   const [billingInterval, setBillingInterval] =
     useState<BillingInterval>("monthly");
   const { createCheckout, isLoading } = useCheckout();
+  const router = useRouter();
+  const [isActivatingTrial, setIsActivatingTrial] = useState(false);
 
   const handleUpgrade = async (priceId: string) => {
     await createCheckout(priceId);
+  };
+
+  const handleActivateTrial = async () => {
+    setIsActivatingTrial(true);
+    try {
+      const result = await activateFreeTrial();
+
+      if (result.success) {
+        toastSuccess(
+          "Thành công!",
+          "Bạn đã kích hoạt gói dùng thử 3 ngày Pro miễn phí"
+        );
+        router.push("/dashboard");
+      } else {
+        // Handle different error cases
+        if (result.code === "UNAUTHORIZED") {
+          // User not logged in - redirect to signup
+          router.push("/signup?trial=true");
+        } else if (result.code === "ALREADY_PRO") {
+          toastError("Bạn đã có gói Pro rồi", "Không cần kích hoạt trial nữa");
+        } else if (result.code === "TRIAL_USED") {
+          toastError(
+            "Đã sử dụng gói dùng thử",
+            "Bạn đã dùng gói trial rồi. Vui lòng nâng cấp Pro để tiếp tục."
+          );
+        } else {
+          toastError("Có lỗi xảy ra", result.error);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to activate trial:", error);
+      toastError("Có lỗi xảy ra", "Vui lòng thử lại sau");
+    } finally {
+      setIsActivatingTrial(false);
+    }
   };
 
   // Calculate prices
@@ -125,19 +165,29 @@ export default function PricingPage() {
       {/* Pricing Cards */}
       <section className="container mx-auto px-4 pb-16">
         <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3 items-start">
-          {/* Free Plan */}
-          <Card className="relative flex flex-col h-full">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Miễn phí</CardTitle>
-              <CardDescription>Hoàn hảo để dùng thử VibeEditor</CardDescription>
+          {/* Trial 3 Days */}
+          <Card className="relative flex flex-col h-full border-primary/50">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-xs font-semibold">
+                🎁 MIỄN PHÍ 3 NGÀY
+              </span>
+            </div>
+            <CardHeader className="text-center pt-8">
+              <CardTitle className="text-2xl">Dùng thử Pro</CardTitle>
+              <CardDescription>
+                Trải nghiệm đầy đủ tính năng Pro
+              </CardDescription>
               <div className="mt-4">
                 <span className="text-5xl font-bold">0đ</span>
+                <span className="text-muted-foreground text-sm block mt-2">
+                  3 ngày dùng thử
+                </span>
               </div>
             </CardHeader>
 
             <CardContent className="flex-1">
               <ul className="space-y-3">
-                {freeFeatures.map((feature, index) => (
+                {trialFeatures.map((feature, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                     <span className="text-sm">{feature}</span>
@@ -147,8 +197,20 @@ export default function PricingPage() {
             </CardContent>
 
             <CardFooter className="mt-auto">
-              <Button asChild className="w-full" variant="outline" size="lg">
-                <Link href="/signup">Bắt đầu ngay</Link>
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleActivateTrial}
+                disabled={isActivatingTrial}
+              >
+                {isActivatingTrial ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang kích hoạt...
+                  </>
+                ) : (
+                  "Dùng thử miễn phí 3 ngày"
+                )}
               </Button>
             </CardFooter>
           </Card>
