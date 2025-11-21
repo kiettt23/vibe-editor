@@ -21,8 +21,9 @@ import { DeleteProjectDialog } from "./DeleteProjectDialog";
 import { CreateProjectDialog } from "./CreateProjectDialog";
 import { ProBadge } from "@/components/shared/pro-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Settings } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useBillingPortal } from "@/hooks/useBillingPortal";
 
 interface ProjectListProps {
   projects: Project[];
@@ -50,6 +51,7 @@ export function ProjectList({
   // Real-time subscription check (đồng bộ với Editor)
   // Ưu tiên client-side check để luôn đồng bộ với DB
   const { isPro: isClientPro, isLoading: isSubLoading } = useSubscription();
+  const { openBillingPortal, isLoading: isPortalLoading } = useBillingPortal();
 
   // Use client-side subscription after initial load completes
   // This ensures dashboard syncs with database changes immediately
@@ -119,13 +121,25 @@ export function ProjectList({
               {displayIsPro ? "Pro" : "Miễn Phí"}
             </div>
             {displayIsPro ? (
-              <p className="text-xs text-muted-foreground mt-1">
-                {subscriptionStatus.isTrial
-                  ? `Trial: còn ${subscriptionStatus.daysRemaining} ngày`
-                  : subscriptionStatus.daysRemaining !== null
-                  ? `Còn ${subscriptionStatus.daysRemaining} ngày`
-                  : "Không giới hạn"}
-              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {subscriptionStatus.isTrial
+                    ? `Trial: còn ${subscriptionStatus.daysRemaining} ngày`
+                    : subscriptionStatus.daysRemaining !== null
+                    ? `Còn ${subscriptionStatus.daysRemaining} ngày`
+                    : "Không giới hạn"}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={openBillingPortal}
+                  disabled={isPortalLoading}
+                >
+                  <Settings className="mr-1.5 h-3 w-3" />
+                  Quản lý gói
+                </Button>
+              </div>
             ) : (
               <Button asChild variant="link" size="sm" className="px-0 h-auto">
                 <Link href="/pricing">Nâng cấp lên Pro →</Link>

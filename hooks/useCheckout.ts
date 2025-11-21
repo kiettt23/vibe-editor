@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { getStripe } from "@/lib/stripe/client";
 import { toast } from "sonner";
 
 export function useCheckout() {
@@ -25,20 +24,15 @@ export function useCheckout() {
         throw new Error(error.error || "Failed to create checkout");
       }
 
-      const { sessionId } = await response.json();
+      const { url } = await response.json();
 
-      // Redirect to Stripe Checkout
-      const stripe = await getStripe();
-      if (!stripe) {
-        throw new Error("Failed to load Stripe");
+      // Redirect to Stripe Checkout (new method)
+      if (!url) {
+        throw new Error("No checkout URL received");
       }
 
-      // @ts-expect-error: Stripe types issue with redirectToCheckout
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      // Use direct redirect instead of deprecated redirectToCheckout
+      window.location.href = url;
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error(

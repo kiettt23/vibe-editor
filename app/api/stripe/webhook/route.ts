@@ -170,8 +170,21 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   console.log(`[Webhook] Subscription updated for user: ${userId}`);
 
   const priceId = subscription.items.data[0]?.price.id;
+
   // @ts-expect-error: Stripe type issue with current_period_end
-  const expiryDate = new Date(subscription.current_period_end * 1000);
+  const periodEnd = subscription.current_period_end;
+
+  if (!periodEnd || typeof periodEnd !== "number") {
+    console.error("[Webhook] Invalid current_period_end:", periodEnd);
+    return;
+  }
+
+  const expiryDate = new Date(periodEnd * 1000);
+
+  if (isNaN(expiryDate.getTime())) {
+    console.error("[Webhook] Invalid date from timestamp:", periodEnd);
+    return;
+  }
 
   const supabase = await createClient();
   const { error } = await supabase

@@ -45,17 +45,27 @@ CREATE POLICY "Service role has full access"
 CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Create user profile (from initial migration)
+  INSERT INTO public.user_profiles (id, display_name, avatar_url)
+  VALUES (
+    NEW.id,
+    NEW.raw_user_meta_data->>'display_name',
+    NEW.raw_user_meta_data->>'avatar_url'
+  );
+  
+  -- Create user subscription with 3-day trial
   INSERT INTO public.user_subscriptions (user_id, subscription_tier, subscription_expires_at)
   VALUES (
     NEW.id,
     'pro',
     NOW() + INTERVAL '3 days'
   );
+  
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger to auto-create subscription when user signs up
+-- Trigger to auto-create profile + subscription when user signs up
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
