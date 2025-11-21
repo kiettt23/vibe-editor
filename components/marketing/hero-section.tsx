@@ -59,7 +59,7 @@ export default function HeroSection() {
                   variant="outline"
                   className="text-base px-6 py-3 h-fit"
                 >
-                  <Link href="#features">Xem tính năng</Link>
+                  <Link href="/features">Xem tính năng</Link>
                 </Button>
               </div>
 

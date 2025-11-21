@@ -12,15 +12,15 @@ const links = [
   },
   {
     title: "Hướng dẫn",
-    href: "#",
+    href: "/",
   },
   {
     title: "Liên hệ",
-    href: "#",
+    href: "/",
   },
   {
     title: "Về chúng tôi",
-    href: "#",
+    href: "/",
   },
 ];
 
