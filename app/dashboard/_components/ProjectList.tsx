@@ -57,9 +57,6 @@ export function ProjectList({
   // This ensures dashboard syncs with database changes immediately
   const displayIsPro = !isSubLoading ? isClientPro : subscription === "pro";
 
-  // DEBUG: Log subscription status
-  console.log("[Dashboard] Subscription Status:", subscriptionStatus);
-
   const handleDeleteClick = (projectId: string, projectName: string) => {
     setProjectToDelete({ id: projectId, name: projectName });
     setDeleteDialogOpen(true);

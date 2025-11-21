@@ -26,9 +26,6 @@ export function TrialActivator() {
             "Chào mừng bạn!",
             "Bạn đã nhận 3 ngày dùng thử Pro miễn phí 🎉"
           );
-        } else {
-          // Silently fail if trial already used or other errors
-          console.log("Trial activation failed:", result.error);
         }
 
         // Remove ?trial=true from URL

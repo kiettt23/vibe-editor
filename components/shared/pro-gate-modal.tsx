@@ -32,8 +32,6 @@ export function ProGateModal({
 
   const handleUpgrade = async () => {
     setIsLoading(true);
-    // TODO: Integrate with Stripe payment
-    // For now, redirect to pricing page
     window.location.href = "/pricing";
   };
 
