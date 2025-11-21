@@ -13,9 +13,9 @@
 
 ## 📸 **Demo**
 
-🌐 **Live Demo:** [https://vibeeditor.vercel.app](https://vibeeditor.vercel.app) _(Coming Soon)_
+🌐 **Live Demo:** [https://vibe-editor-ten.vercel.app](https://vibe-editor-ten.vercel.app)
 
-![VibeEditor Screenshot](https://via.placeholder.com/1200x600?text=VibeEditor+Screenshot) _(Add screenshot sau khi deploy)_
+![VibeEditor Screenshot](./public/screenshot.png)
 
 ---
 

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAllProjects } from "@/app/actions/projects";
@@ -38,7 +39,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TrialActivator />
+      <Suspense fallback={null}>
+        <TrialActivator />
+      </Suspense>
       <HeroHeader />
 
       <main className="container mx-auto px-4 py-20 pt-32">
