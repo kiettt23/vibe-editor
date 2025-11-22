@@ -64,7 +64,11 @@ export function EditorWorkspace({
 
   // Custom hooks
   const { isCanvasReady, containerRef } = useCanvasSetup();
-  const { handleSave, isSaving, lastSaved } = useEditorSave({ projectId });
+  const { handleSave, isSaving, lastSaved } = useEditorSave({
+    projectId,
+    enableAutoSave: isPro, // Auto-save enabled for Pro users only
+    autoSaveDelay: 3000, // 3 seconds after last change
+  });
 
   // Zustand store
   const {
@@ -289,7 +293,7 @@ export function EditorWorkspace({
         {/* Canvas Area with Centered Upload Overlay */}
         <div className="flex-1 relative">
           {/* Canvas always rendered (needed for Konva init) */}
-          <CanvasArea zoom={zoom} />
+          <CanvasArea zoom={zoom} onImageDrop={handleImageUpload} />
 
           {/* Upload overlay when no image */}
           {!isImageLoaded && (
@@ -327,7 +331,11 @@ export function EditorWorkspace({
       </div>
 
       {/* Footer */}
-      <EditorFooter isImageLoaded={isImageLoaded} isDirty={isDirty} />
+      <EditorFooter
+        isImageLoaded={isImageLoaded}
+        isDirty={isDirty}
+        isSaving={isSaving}
+      />
 
       {/* Keyboard Shortcuts Dialog */}
       <KeyboardShortcutsDialog
