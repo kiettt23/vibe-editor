@@ -3,11 +3,12 @@ import { useEditorStore } from "@/store/editor-store";
 import { getCanvasManager } from "@/lib/editor/canvas-manager";
 import { toast } from "sonner";
 import {
-  uploadProjectImage,
   deleteProjectImage,
   saveProjectCanvas,
   uploadProjectThumbnail,
+  updateProjectImageUrl,
 } from "@/app/actions/projects";
+import { createClient } from "@/lib/supabase/client";
 import type { Project, CanvasState } from "@/types/project";
 
 interface UseImageUploadProps {
@@ -91,18 +92,67 @@ export function useImageUpload({
       setImageLoaded(true);
       console.log("✅ Image rendered in canvas");
 
-      // Upload image to Storage in background
+      // Upload image to Storage directly from client (no Server Action body limit)
       let imageUrl: string;
       if (projectId) {
         try {
           toast.info("Đang upload ảnh...");
-          imageUrl = await uploadProjectImage(projectId, file);
-          console.log("✅ Image uploaded to Storage:", imageUrl);
+
+          // Get Supabase client and current user
+          const supabase = createClient();
+          const {
+            data: { user },
+            error: authError,
+          } = await supabase.auth.getUser();
+
+          if (authError || !user) {
+            throw new Error("Vui lòng đăng nhập để upload ảnh");
+          }
+
+          // Generate unique filename
+          const fileExt = file.name.split(".").pop() || "png";
+          const uniqueFileName = `${projectId}-${Date.now()}.${fileExt}`;
+          const filePath = `images/${user.id}/${uniqueFileName}`;
+
+          console.log("📤 Uploading to Supabase Storage:", filePath);
+
+          // Upload directly to Supabase Storage (client-side)
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from("project-thumbnails")
+              .upload(filePath, file, {
+                contentType: file.type,
+                cacheControl: "3600",
+                upsert: true,
+              });
+
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            throw new Error(`Lỗi upload: ${uploadError.message}`);
+          }
+
+          console.log("✅ Upload successful:", uploadData.path);
+
+          // Get public URL
+          const {
+            data: { publicUrl },
+          } = supabase.storage
+            .from("project-thumbnails")
+            .getPublicUrl(filePath);
+
+          imageUrl = publicUrl;
+          console.log("✅ Public URL:", publicUrl);
+
+          // Update project image URL in database (via Server Action - only sends URL string)
+          await updateProjectImageUrl(projectId, publicUrl);
+          console.log("✅ Database updated with image URL");
         } catch (uploadError) {
           console.error("Failed to upload image:", uploadError);
           toast.error("Không thể tải ảnh lên server", {
             description:
-              "Vui lòng kiểm tra kết nối mạng và thử lại. Nếu lỗi vẫn tiếp diễn, hãy liên hệ hỗ trợ.",
+              uploadError instanceof Error
+                ? uploadError.message
+                : "Vui lòng kiểm tra kết nối mạng và thử lại.",
           });
           setIsUploading(false);
           return;

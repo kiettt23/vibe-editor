@@ -407,13 +407,14 @@ export async function uploadProjectThumbnail(
 }
 
 /**
- * Upload original full-size image to Storage
- * Returns public URL for saving to canvas_data
+ * Update project's image URL in database
+ * NOTE: Image upload is now handled client-side to avoid Server Action body size limit
+ * This action only updates the database with the Storage URL
  */
-export async function uploadProjectImage(
+export async function updateProjectImageUrl(
   projectId: string,
-  imageFile: File
-): Promise<string> {
+  imageUrl: string
+): Promise<void> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -423,31 +424,58 @@ export async function uploadProjectImage(
     throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
-  // Generate unique filename
-  const fileExt = imageFile.name.split(".").pop() || "png";
-  const fileName = `${projectId}-${Date.now()}.${fileExt}`;
-  const filePath = `images/${user.id}/${fileName}`; // Full path: images/userId/filename
+  // Validate project ownership
+  // NOTE: Supabase type inference issue - need type assertion
+  const { data: project, error: fetchError } = await supabase
+    .from("projects")
+    .select("user_id, canvas_data")
+    .eq("id", projectId)
+    .single();
 
-  // Upload to Supabase Storage (project-thumbnails bucket)
-  const { error: uploadError } = await supabase.storage
-    .from("project-thumbnails")
-    .upload(filePath, imageFile, {
-      contentType: imageFile.type,
-      upsert: true,
-    });
-
-  if (uploadError) {
-    console.error("Upload error:", uploadError);
-    logError(uploadError, "uploadProjectImage");
-    throw new Error(`Không thể upload ảnh lên Storage: ${uploadError.message}`);
+  if (fetchError || !project) {
+    throw new Error(ERROR_MESSAGES.PROJECT_NOT_FOUND);
   }
 
-  // Get public URL
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("project-thumbnails").getPublicUrl(filePath);
+  const projectData = project as unknown as {
+    user_id: string;
+    canvas_data: Json;
+  };
 
-  return publicUrl;
+  if (projectData.user_id !== user.id) {
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
+  }
+
+  // Merge new imageUrl with existing canvas_data
+  const existingData =
+    typeof projectData.canvas_data === "object" &&
+    projectData.canvas_data !== null
+      ? (projectData.canvas_data as Record<string, unknown>)
+      : {};
+
+  const updatedCanvasData: Json = {
+    ...existingData,
+    imageUrl,
+  };
+
+  const updateData: ProjectUpdate = {
+    canvas_data: updatedCanvasData,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Update canvas_data with new image URL
+  // NOTE: Supabase type inference issue - using @ts-expect-error
+  const { error: updateError } = await supabase
+    .from("projects")
+    // @ts-expect-error - Supabase v2 Update type inference limitation
+    .update(updateData)
+    .eq("id", projectId)
+    .eq("user_id", user.id);
+
+  if (updateError) {
+    console.error("Update error:", updateError);
+    logError(updateError, "updateProjectImageUrl");
+    throw new Error(`Không thể cập nhật URL ảnh: ${updateError.message}`);
+  }
 }
 
 // ============================================================================
