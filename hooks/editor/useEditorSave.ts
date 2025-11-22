@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useEffect } from "react";
+import { useState, useLayoutEffect, useEffect, useRef } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { toast } from "sonner";
 import {
@@ -9,16 +9,23 @@ import type { CanvasState } from "@/types/project";
 
 interface UseEditorSaveProps {
   projectId?: string;
+  enableAutoSave?: boolean; // Enable auto-save for Pro users
+  autoSaveDelay?: number; // Delay in ms (default 3000)
 }
 
 /**
- * Hook quản lý save project và unsaved changes warning
+ * Hook quản lý save project, auto-save, và unsaved changes warning
  */
-export function useEditorSave({ projectId }: UseEditorSaveProps) {
+export function useEditorSave({
+  projectId,
+  enableAutoSave = false,
+  autoSaveDelay = 3000,
+}: UseEditorSaveProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { stage, imageNode, currentFilters, originalImageSrc } =
+  const { stage, imageNode, currentFilters, originalImageSrc, isDirty } =
     useEditorStore();
 
   // Get current canvas state for saving
@@ -104,6 +111,65 @@ export function useEditorSave({ projectId }: UseEditorSaveProps) {
       setIsSaving(false);
     }
   };
+
+  // Auto-save when filters change (Pro feature)
+  useEffect(() => {
+    if (!enableAutoSave || !projectId || !isDirty) {
+      return;
+    }
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      const canvasState = getCurrentCanvasState();
+      if (!canvasState) return;
+
+      console.log("🔄 Auto-saving project...");
+      setIsSaving(true);
+
+      try {
+        await saveProjectCanvas(projectId, canvasState);
+        useEditorStore.setState({ isDirty: false });
+        setLastSaved(new Date());
+
+        // Generate thumbnail in background
+        const thumbnailBlob = await generateThumbnail();
+        if (thumbnailBlob) {
+          uploadProjectThumbnail(projectId, thumbnailBlob).catch((error) =>
+            console.error("Thumbnail upload error:", error)
+          );
+        }
+
+        toast.success("Đã tự động lưu!", { duration: 2000 });
+        console.log("✅ Auto-save completed");
+      } catch (error) {
+        console.error("Auto-save error:", error);
+        toast.error("Không thể tự động lưu. Vui lòng lưu thủ công.");
+      } finally {
+        setIsSaving(false);
+      }
+    }, autoSaveDelay);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    enableAutoSave,
+    projectId,
+    isDirty,
+    currentFilters,
+    autoSaveDelay,
+    stage,
+    imageNode,
+    originalImageSrc,
+  ]);
 
   // Warn before leaving if unsaved changes (browser close/refresh)
   useLayoutEffect(() => {

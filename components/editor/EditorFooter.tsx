@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Keyboard } from "lucide-react";
+import { Keyboard, Loader2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +13,7 @@ import {
 interface EditorFooterProps {
   isImageLoaded: boolean;
   isDirty: boolean;
+  isSaving?: boolean;
 }
 
 const shortcuts = [
@@ -24,7 +25,11 @@ const shortcuts = [
   { keys: "Ctrl + 0", label: "Reset zoom" },
 ];
 
-export function EditorFooter({ isImageLoaded, isDirty }: EditorFooterProps) {
+export function EditorFooter({
+  isImageLoaded,
+  isDirty,
+  isSaving = false,
+}: EditorFooterProps) {
   return (
     <div className="flex h-8 items-center justify-between border-t px-4 bg-muted/30 text-xs">
       {/* Left: Status */}
@@ -40,7 +45,20 @@ export function EditorFooter({ isImageLoaded, isDirty }: EditorFooterProps) {
           </span>
         </div>
 
-        {isDirty && (
+        {isSaving && (
+          <>
+            <Separator orientation="vertical" className="h-3" />
+            <Badge
+              variant="outline"
+              className="h-5 text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20 flex items-center gap-1"
+            >
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Đang lưu...
+            </Badge>
+          </>
+        )}
+
+        {!isSaving && isDirty && (
           <>
             <Separator orientation="vertical" className="h-3" />
             <Badge
