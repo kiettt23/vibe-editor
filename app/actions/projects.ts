@@ -426,9 +426,9 @@ export async function uploadProjectImage(
   // Generate unique filename
   const fileExt = imageFile.name.split(".").pop() || "png";
   const fileName = `${projectId}-${Date.now()}.${fileExt}`;
-  const filePath = `images/${user.id}/${fileName}`;
+  const filePath = `images/${user.id}/${fileName}`; // Full path: images/userId/filename
 
-  // Upload to Supabase Storage
+  // Upload to Supabase Storage (project-thumbnails bucket)
   const { error: uploadError } = await supabase.storage
     .from("project-thumbnails")
     .upload(filePath, imageFile, {
@@ -437,8 +437,9 @@ export async function uploadProjectImage(
     });
 
   if (uploadError) {
+    console.error("Upload error:", uploadError);
     logError(uploadError, "uploadProjectImage");
-    throw new Error("Không thể upload ảnh lên Storage");
+    throw new Error(`Không thể upload ảnh lên Storage: ${uploadError.message}`);
   }
 
   // Get public URL

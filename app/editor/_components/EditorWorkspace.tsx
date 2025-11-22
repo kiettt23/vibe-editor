@@ -298,7 +298,10 @@ export function EditorWorkspace({
           {/* Upload overlay when no image */}
           {!isImageLoaded && (
             <div className="absolute inset-0 bg-background/95 z-10">
-              <CenteredUpload isUploading={isUploading} />
+              <CenteredUpload
+                isUploading={isUploading}
+                onImageDrop={handleImageUpload}
+              />
             </div>
           )}
         </div>

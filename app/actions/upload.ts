@@ -22,10 +22,11 @@ export async function uploadImageToStorageAction(formData: FormData) {
 
   const fileExt = file.name.split(".").pop();
   const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+  const filePath = `images/${fileName}`; // Full path in bucket
 
   const { data, error } = await supabase.storage
-    .from("images")
-    .upload(fileName, file, {
+    .from("project-thumbnails")
+    .upload(filePath, file, {
       cacheControl: "3600",
       upsert: false,
     });
@@ -37,7 +38,7 @@ export async function uploadImageToStorageAction(formData: FormData) {
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from("images").getPublicUrl(data.path);
+  } = supabase.storage.from("project-thumbnails").getPublicUrl(data.path);
 
   return { success: true, url: publicUrl };
 }
@@ -52,12 +53,16 @@ export async function deleteImageFromStorageAction(url: string) {
     return { error: ERROR_MESSAGES.UNAUTHORIZED };
   }
 
-  const path = url.split("/images/").pop();
-  if (!path) {
+  // Extract path from URL (after /project-thumbnails/)
+  const pathMatch = url.match(/\/project-thumbnails\/(.+)$/);
+  if (!pathMatch || !pathMatch[1]) {
     return { error: "Invalid image URL" };
   }
+  const path = pathMatch[1];
 
-  const { error } = await supabase.storage.from("images").remove([path]);
+  const { error } = await supabase.storage
+    .from("project-thumbnails")
+    .remove([path]);
 
   if (error) {
     logError(error, "deleteImageFromStorage");

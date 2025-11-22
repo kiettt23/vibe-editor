@@ -1,18 +1,72 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CenteredUploadProps {
   isUploading: boolean;
+  onImageDrop?: (files: File[]) => void;
 }
 
-export function CenteredUpload({ isUploading }: CenteredUploadProps) {
+export function CenteredUpload({
+  isUploading,
+  onImageDrop,
+}: CenteredUploadProps) {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    if (imageFiles.length > 0 && onImageDrop) {
+      onImageDrop(imageFiles);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center h-full">
+    <div
+      className={cn(
+        "flex items-center justify-center h-full transition-all",
+        isDragging && "bg-primary/5 ring-2 ring-primary ring-inset"
+      )}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div className="text-center space-y-6 max-w-md">
         {/* Upload Icon */}
-        <div className="mx-auto w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
+        <div
+          className={cn(
+            "mx-auto w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center transition-all",
+            isDragging && "scale-110 border-primary bg-primary/20"
+          )}
+        >
           {isUploading ? (
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
           ) : (
@@ -23,28 +77,44 @@ export function CenteredUpload({ isUploading }: CenteredUploadProps) {
         {/* Title */}
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold text-foreground">
-            {isUploading ? "Đang tải ảnh..." : "Tải ảnh lên"}
+            {isUploading
+              ? "Đang tải ảnh..."
+              : isDragging
+              ? "Thả ảnh vào đây"
+              : "Tải ảnh lên"}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Click vào nút bên dưới để chọn ảnh
-            <br />
-            từ máy tính của bạn
+            {isDragging ? (
+              <>
+                Thả file để upload
+                <br />
+                Hỗ trợ: JPG, PNG, WebP
+              </>
+            ) : (
+              <>
+                Kéo thả ảnh vào đây hoặc click nút bên dưới
+                <br />
+                để chọn ảnh từ máy tính
+              </>
+            )}
           </p>
         </div>
 
         {/* Upload Button */}
-        <div>
-          <Button
-            size="lg"
-            disabled={isUploading}
-            onClick={() =>
-              document.getElementById("centered-file-input")?.click()
-            }
-          >
-            <Upload className="mr-2 h-5 w-5" />
-            Chọn ảnh
-          </Button>
-        </div>
+        {!isDragging && (
+          <div>
+            <Button
+              size="lg"
+              disabled={isUploading}
+              onClick={() =>
+                document.getElementById("centered-file-input")?.click()
+              }
+            >
+              <Upload className="mr-2 h-5 w-5" />
+              Chọn ảnh
+            </Button>
+          </div>
+        )}
 
         {/* Format Hint */}
         <p className="text-xs text-muted-foreground">
