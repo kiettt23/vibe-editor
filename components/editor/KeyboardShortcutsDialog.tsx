@@ -87,7 +87,7 @@ export function KeyboardShortcutsDialog({
                       {shortcut.keys.map((key, keyIndex) => (
                         <kbd
                           key={keyIndex}
-                          className="px-3 py-1.5 rounded-md bg-linear-to-b from-muted to-muted/80 border border-border shadow-sm font-mono text-xs font-semibold text-foreground min-w-10 text-center"
+                          className="px-3 py-1.5 rounded-md bg-linear-to-b from-muted/50 to-muted border border-border shadow-sm font-mono text-xs font-semibold text-foreground dark:text-foreground min-w-10 text-center"
                         >
                           {key}
                         </kbd>
@@ -103,11 +103,11 @@ export function KeyboardShortcutsDialog({
         <div className="pt-4 border-t text-center">
           <p className="text-xs text-muted-foreground">
             Nhấn{" "}
-            <kbd className="px-2 py-0.5 rounded bg-muted font-mono text-xs">
+            <kbd className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
               Ctrl
             </kbd>{" "}
             +{" "}
-            <kbd className="px-2 py-0.5 rounded bg-muted font-mono text-xs">
+            <kbd className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
               K
             </kbd>{" "}
             để mở lại

@@ -35,11 +35,21 @@ export function UploadPanel({
       const error = errors[0];
 
       if (error?.code === "file-too-large") {
-        toast.error("File quá lớn! Tối đa 10MB");
+        toast.error("File quá lớn! Kích thước tối đa: 10MB", {
+          description: "Vui lòng nén ảnh hoặc chọn file nhỏ hơn",
+        });
       } else if (error?.code === "file-invalid-type") {
-        toast.error("Chỉ chấp nhận file ảnh (PNG, JPG, WebP)");
+        toast.error("File không hợp lệ! Chỉ hỗ trợ ảnh PNG, JPG, WebP", {
+          description: "Vui lòng chọn file ảnh với định dạng đúng",
+        });
+      } else if (error?.code === "too-many-files") {
+        toast.error("Chỉ có thể tải 1 ảnh mỗi lần", {
+          description: "Vui lòng chọn lại một file duy nhất",
+        });
       } else {
-        toast.error("File không hợp lệ");
+        toast.error("Không thể tải ảnh", {
+          description: "Vui lòng thử lại hoặc chọn file khác",
+        });
       }
     },
   });

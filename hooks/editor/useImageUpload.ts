@@ -43,7 +43,19 @@ export function useImageUpload({
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File quá lớn! Tối đa 10MB");
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error("File quá lớn! Kích thước tối đa: 10MB", {
+        description: `File của bạn: ${fileSizeMB}MB. Vui lòng nén ảnh hoặc chọn file nhỏ hơn.`,
+      });
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("File không hợp lệ! Chỉ hỗ trợ ảnh PNG, JPG, WebP", {
+        description: `File của bạn: ${file.type}. Vui lòng chọn file ảnh với định dạng đúng.`,
+      });
       return;
     }
 
@@ -81,7 +93,10 @@ export function useImageUpload({
             console.log("✅ Image uploaded to Storage:", imageUrl);
           } catch (uploadError) {
             console.error("Failed to upload image:", uploadError);
-            toast.error("Không thể upload ảnh");
+            toast.error("Không thể tải ảnh lên server", {
+              description:
+                "Vui lòng kiểm tra kết nối mạng và thử lại. Nếu lỗi vẫn tiếp diễn, hãy liên hệ hỗ trợ.",
+            });
             setIsUploading(false);
             return;
           }
@@ -138,7 +153,27 @@ export function useImageUpload({
       }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Không thể tải ảnh");
+      if (error instanceof Error) {
+        if (error.message.includes("canvas")) {
+          toast.error("Lỗi canvas khi tải ảnh", {
+            description: "Vui lòng refresh trang và thử lại.",
+          });
+        } else if (error.message.includes("network")) {
+          toast.error("Lỗi kết nối mạng", {
+            description: "Vui lòng kiểm tra kết nối internet và thử lại.",
+          });
+        } else {
+          toast.error("Không thể tải ảnh", {
+            description:
+              error.message || "Lỗi không xác định. Vui lòng thử lại.",
+          });
+        }
+      } else {
+        toast.error("Không thể tải ảnh", {
+          description:
+            "Lỗi không xác định. Vui lòng thử lại hoặc chọn file khác.",
+        });
+      }
     } finally {
       setIsUploading(false);
     }
