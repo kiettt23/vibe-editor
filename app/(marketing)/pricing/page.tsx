@@ -168,7 +168,7 @@ export default function PricingPage() {
           {/* Trial 3 Days */}
           <Card className="relative flex flex-col h-full border-primary/50">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-xs font-semibold">
+              <span className="bg-linear-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-xs font-semibold">
                 🎁 MIỄN PHÍ 3 NGÀY
               </span>
             </div>

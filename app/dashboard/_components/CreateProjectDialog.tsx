@@ -70,24 +70,29 @@ export function CreateProjectDialog({
         height: 1080,
       };
 
-      const newProject = await createProject({
+      const result = await createProject({
         name: formData.name.trim(),
         canvas_data: initialCanvasState as unknown as Json,
         width: 1920,
         height: 1080,
       });
 
-      toast.success("Đã tạo dự án thành công!");
-      onOpenChange(false);
+      if (result.error) {
+        toast.error(result.error);
+        setIsCreating(false);
+        return;
+      }
 
-      // Redirect to editor
-      router.push(`/editor/${newProject.id}`);
+      if (result.data) {
+        toast.success("Đã tạo dự án thành công!");
+        onOpenChange(false);
+
+        // Redirect to editor
+        router.push(`/editor/${result.data.id}`);
+      }
     } catch (error) {
       console.error("Create project error:", error);
-      // Show the actual error message from server (e.g., project limit)
-      const errorMessage =
-        error instanceof Error ? error.message : "Không thể tạo dự án";
-      toast.error(errorMessage);
+      toast.error("Không thể tạo dự án. Vui lòng thử lại.");
       setIsCreating(false);
     }
   };

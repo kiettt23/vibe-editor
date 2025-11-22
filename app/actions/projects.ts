@@ -19,65 +19,70 @@ export async function createProject(data: {
   height?: number;
   thumbnail_url?: string;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) {
-    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
-  }
-
-  // Check project limit for free users
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("subscription")
-    .eq("id", user.id)
-    .single();
-
-  // NOTE: Supabase type inference issue - profile type inferred as never
-  const subscriptionTier =
-    (profile as { subscription?: "free" | "pro" } | null)?.subscription ||
-    "free";
-
-  if (subscriptionTier === "free") {
-    const { count } = await supabase
-      .from("projects")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    if (count !== null && count >= SUBSCRIPTION.FREE_PROJECT_LIMIT) {
-      throw new Error(
-        `Bạn đã đạt giới hạn ${SUBSCRIPTION.FREE_PROJECT_LIMIT} dự án. Nâng cấp lên Pro để tạo thêm!`
-      );
+    if (!user) {
+      return { error: ERROR_MESSAGES.UNAUTHORIZED };
     }
-  }
 
-  const insertData: ProjectInsert = {
-    user_id: user.id,
-    name: data.name,
-    canvas_data: data.canvas_data,
-    width: data.width || 1920,
-    height: data.height || 1080,
-    thumbnail_url: data.thumbnail_url || null,
-  };
+    // Check project limit for free users
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("subscription")
+      .eq("id", user.id)
+      .single();
 
-  // NOTE: Supabase type inference issue - generated types don't match client API
-  // This is a known limitation with Supabase v2 typed clients
-  const { data: project, error } = await supabase
-    .from("projects")
-    // @ts-expect-error - Supabase v2 Insert type inference limitation
-    .insert(insertData)
-    .select()
-    .single();
+    // NOTE: Supabase type inference issue - profile type inferred as never
+    const subscriptionTier =
+      (profile as { subscription?: "free" | "pro" } | null)?.subscription ||
+      "free";
 
-  if (error) {
+    if (subscriptionTier === "free") {
+      const { count } = await supabase
+        .from("projects")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (count !== null && count >= SUBSCRIPTION.FREE_PROJECT_LIMIT) {
+        return {
+          error: `Bạn đã đạt giới hạn ${SUBSCRIPTION.FREE_PROJECT_LIMIT} dự án của gói Free. Nâng cấp lên Pro để tạo thêm!`,
+        };
+      }
+    }
+
+    const insertData: ProjectInsert = {
+      user_id: user.id,
+      name: data.name,
+      canvas_data: data.canvas_data,
+      width: data.width || 1920,
+      height: data.height || 1080,
+      thumbnail_url: data.thumbnail_url || null,
+    };
+
+    // NOTE: Supabase type inference issue - generated types don't match client API
+    // This is a known limitation with Supabase v2 typed clients
+    const { data: project, error } = await supabase
+      .from("projects")
+      // @ts-expect-error - Supabase v2 Insert type inference limitation
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      logError(error, "createProject");
+      return { error: ERROR_MESSAGES.PROJECT_CREATE_FAILED };
+    }
+
+    revalidatePath("/dashboard");
+    return { data: project as Project };
+  } catch (error) {
     logError(error, "createProject");
-    throw new Error(ERROR_MESSAGES.PROJECT_CREATE_FAILED);
+    return { error: "Không thể tạo dự án. Vui lòng thử lại." };
   }
-
-  revalidatePath("/dashboard");
-  return project as Project;
 }
 
 export async function updateProject(

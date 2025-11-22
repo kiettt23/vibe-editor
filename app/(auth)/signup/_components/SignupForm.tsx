@@ -124,7 +124,7 @@ export function SignupForm() {
             </CardDescription>
           </div>
           {wantTrial && (
-            <Alert className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <Alert className="bg-linear-to-r from-purple-50 to-pink-50 border-purple-200">
               <AlertDescription className="text-sm text-purple-900">
                 🎁 Bạn sẽ được trải nghiệm{" "}
                 <strong>dùng thử Pro 3 ngày miễn phí</strong>
