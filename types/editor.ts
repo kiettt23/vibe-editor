@@ -17,11 +17,11 @@ export interface EditorState {
 // ============================================================================
 
 export interface FilterSettings {
-  blur: number; // 0-100
-  brightness: number; // -1 to 1 (Brighten filter)
-  contrast: number; // -100 to 100
-  saturation: number; // -1 to 1 (0 = no change)
-  hue: number; // 0-359 degrees
+  blur: number; // 0-100 (Konva internal: 0-50)
+  brightness: number; // UI: -100 to +100 (Konva internal: -1 to 1)
+  contrast: number; // -100 to +100
+  saturation: number; // UI: -100 to +100 (Konva internal: -1 to 1)
+  hue: number; // UI: -180 to +180 (Konva internal: 0-359)
   grayscale: boolean; // true/false
   sepia: boolean; // true/false
   invert: boolean; // true/false

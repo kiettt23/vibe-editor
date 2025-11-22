@@ -148,7 +148,7 @@ export function AdjustmentsPanel({
                   label="Làm mờ"
                   value={currentFilters.blur}
                   min={0}
-                  max={50}
+                  max={100}
                   step={1}
                   disabled={!isImageLoaded}
                   onChange={(value) => onFilterChange("blur", value)}
@@ -159,9 +159,9 @@ export function AdjustmentsPanel({
                   id="brightness"
                   label="Độ sáng"
                   value={currentFilters.brightness}
-                  min={-1}
-                  max={1}
-                  step={0.01}
+                  min={-100}
+                  max={100}
+                  step={1}
                   disabled={!isImageLoaded}
                   onChange={(value) => onFilterChange("brightness", value)}
                 />
@@ -190,9 +190,9 @@ export function AdjustmentsPanel({
                     id="saturation"
                     label="Độ bão hòa"
                     value={currentFilters.saturation}
-                    min={-1}
-                    max={1}
-                    step={0.01}
+                    min={-100}
+                    max={100}
+                    step={1}
                     disabled={!isImageLoaded || !isPro}
                     onChange={(value) => onFilterChange("saturation", value)}
                   />
@@ -210,8 +210,8 @@ export function AdjustmentsPanel({
                     id="hue"
                     label="Sắc độ"
                     value={currentFilters.hue}
-                    min={0}
-                    max={359}
+                    min={-180}
+                    max={180}
                     step={1}
                     disabled={!isImageLoaded || !isPro}
                     onChange={(value) => onFilterChange("hue", value)}

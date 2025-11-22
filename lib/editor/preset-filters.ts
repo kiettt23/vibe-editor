@@ -1,8 +1,4 @@
-import {
-  FilterPreset,
-  FilterSettings,
-  DEFAULT_FILTER_SETTINGS,
-} from "@/types/editor";
+import { FilterPreset, DEFAULT_FILTER_SETTINGS } from "@/types/editor";
 
 export const FILTER_PRESETS: FilterPreset[] = [
   {
@@ -15,9 +11,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
     description: "Warm sepia tone",
     settings: {
       ...DEFAULT_FILTER_SETTINGS,
-      brightness: 0.1,
+      brightness: 10,
       contrast: 10,
-      saturation: -0.2,
+      saturation: -20,
       sepia: true,
     },
   },
@@ -35,10 +31,10 @@ export const FILTER_PRESETS: FilterPreset[] = [
     description: "Blue tint, high contrast",
     settings: {
       ...DEFAULT_FILTER_SETTINGS,
-      hue: 200,
-      saturation: 0.2,
+      hue: 20,
+      saturation: 20,
       contrast: 20,
-      brightness: -0.05,
+      brightness: -5,
     },
   },
   {
@@ -46,9 +42,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
     description: "Orange/yellow tint",
     settings: {
       ...DEFAULT_FILTER_SETTINGS,
-      hue: 30,
-      saturation: 0.3,
-      brightness: 0.1,
+      hue: -150,
+      saturation: 30,
+      brightness: 10,
     },
   },
   {
@@ -57,7 +53,7 @@ export const FILTER_PRESETS: FilterPreset[] = [
     settings: {
       ...DEFAULT_FILTER_SETTINGS,
       contrast: 40,
-      brightness: 0.05,
+      brightness: 5,
     },
   },
   {
@@ -65,9 +61,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
     description: "Gentle blur và low contrast",
     settings: {
       ...DEFAULT_FILTER_SETTINGS,
-      blur: 5,
+      blur: 10,
       contrast: -10,
-      brightness: 0.05,
+      brightness: 5,
     },
   },
   {
@@ -75,7 +71,7 @@ export const FILTER_PRESETS: FilterPreset[] = [
     description: "Boosted saturation",
     settings: {
       ...DEFAULT_FILTER_SETTINGS,
-      saturation: 0.5,
+      saturation: 50,
       contrast: 10,
     },
   },
@@ -84,9 +80,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
     description: "Washed out look",
     settings: {
       ...DEFAULT_FILTER_SETTINGS,
-      brightness: 0.2,
+      brightness: 20,
       contrast: -15,
-      saturation: -0.3,
+      saturation: -30,
     },
   },
   {
