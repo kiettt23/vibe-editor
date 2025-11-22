@@ -53,9 +53,9 @@ export function EditorHeader({
   const { isPro } = useSubscription();
 
   return (
-    <div className="flex h-14 items-center justify-between border-b px-4 bg-card/50 backdrop-blur-sm">
+    <div className="flex h-14 items-center justify-between border-b px-2 md:px-4 bg-card/50 backdrop-blur-sm">
       {/* Left: Logo + Status */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -63,7 +63,8 @@ export function EditorHeader({
           <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-accent flex items-center justify-center shadow-sm">
             <span className="text-white text-sm font-bold">VE</span>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Hide text on mobile */}
+          <div className="hidden md:flex items-center gap-2">
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-foreground leading-none">
                 Vibe Editor
@@ -76,8 +77,9 @@ export function EditorHeader({
           </div>
         </Link>
 
+        {/* Hide status badges on mobile */}
         {isImageLoaded && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             <span className="text-xs font-medium text-green-700 dark:text-green-400">
               Đã tải ảnh
@@ -86,16 +88,16 @@ export function EditorHeader({
         )}
 
         {lastSaved && (
-          <span className="text-xs text-muted-foreground">
+          <span className="hidden md:block text-xs text-muted-foreground">
             Lưu lúc {lastSaved.toLocaleTimeString("vi-VN")}
           </span>
         )}
       </div>
 
-      {/* Center: Zoom Controls */}
+      {/* Center: Zoom Controls - Hide on mobile */}
       {isImageLoaded && (
         <TooltipProvider>
-          <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted/50 border">
+          <div className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted/50 border">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -142,7 +144,7 @@ export function EditorHeader({
 
       {/* Right: Actions */}
       <TooltipProvider>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           {projectId && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -151,17 +153,19 @@ export function EditorHeader({
                   size="sm"
                   onClick={onSave}
                   disabled={!isImageLoaded || isSaving}
-                  className="h-9 px-3"
+                  className="h-8 md:h-9 px-2 md:px-3"
                 >
                   {isSaving ? (
                     <>
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                      <span className="text-xs">Đang lưu...</span>
+                      <Loader2 className="h-4 w-4 animate-spin md:mr-1.5" />
+                      <span className="hidden md:inline text-xs">
+                        Đang lưu...
+                      </span>
                     </>
                   ) : (
                     <>
-                      <Save className="mr-1.5 h-4 w-4" />
-                      <span className="text-xs">Lưu</span>
+                      <Save className="h-4 w-4 md:mr-1.5" />
+                      <span className="hidden md:inline text-xs">Lưu</span>
                     </>
                   )}
                 </Button>
@@ -181,11 +185,11 @@ export function EditorHeader({
                     variant="default"
                     size="sm"
                     disabled={!isImageLoaded}
-                    className="h-9 px-3"
+                    className="h-8 md:h-9 px-2 md:px-3"
                   >
-                    <Download className="mr-1.5 h-4 w-4" />
-                    <span className="text-xs">Export</span>
-                    <ChevronDown className="ml-1 h-3 w-3" />
+                    <Download className="h-4 w-4 md:mr-1.5" />
+                    <span className="hidden md:inline text-xs">Export</span>
+                    <ChevronDown className="hidden md:inline ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -24,6 +24,7 @@ import { CanvasArea } from "@/components/editor/CanvasArea";
 import { AdjustmentsPanel } from "@/components/editor/AdjustmentsPanel";
 import { EditorFooter } from "@/components/editor/EditorFooter";
 import { KeyboardShortcutsDialog } from "@/components/editor/KeyboardShortcutsDialog";
+import { MobileEditorLayout } from "@/components/editor/MobileEditorLayout";
 
 // Managers
 import { getCanvasManager } from "@/lib/editor/canvas-manager";
@@ -58,6 +59,23 @@ export function EditorWorkspace({
   const [activeTab, setActiveTab] = useState<ToolbarTab>("upload");
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Mobile detection (prevent hydration mismatch)
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Only run on client to prevent hydration mismatch
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Check immediately on mount
+    checkMobile();
+
+    // Listen for resize
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Subscription
   const { isPro } = useSubscription();
@@ -273,64 +291,102 @@ export function EditorWorkspace({
       />
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Vertical Toolbar (Left) */}
-        <VerticalToolbar
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            if (tab === "help") {
-              setShowShortcuts(true);
-            } else {
-              setActiveTab(tab);
-            }
-          }}
-          isImageLoaded={isImageLoaded}
-          onUploadClick={() =>
-            document.getElementById("centered-file-input")?.click()
-          }
-        />
-
-        {/* Canvas Area with Centered Upload Overlay */}
-        <div className="flex-1 relative">
-          {/* Canvas always rendered (needed for Konva init) */}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Canvas Container - Always rendered, positioned by CSS */}
+        <div className={isMobile ? "absolute inset-0 z-0" : "flex-1 relative"}>
           <CanvasArea zoom={zoom} onImageDrop={handleImageUpload} />
+        </div>
 
-          {/* Upload overlay when no image */}
-          {!isImageLoaded && (
-            <div className="absolute inset-0 bg-background/95 z-10">
+        {isMobile ? (
+          /* ========== MOBILE LAYOUT ========== */
+          <MobileEditorLayout
+            isImageLoaded={isImageLoaded}
+            isPro={isPro}
+            onUploadClick={() =>
+              document.getElementById("centered-file-input")?.click()
+            }
+            activeTab={
+              activeTab === "filters" ||
+              activeTab === "transform" ||
+              activeTab === "presets"
+                ? activeTab
+                : "filters"
+            }
+            onTabChange={(tab) => setActiveTab(tab)}
+            currentFilters={currentFilters}
+            onFilterChange={handleFilterChange}
+            onApplyPreset={handleApplyPreset}
+            onResetFilters={handleResetAll}
+            onFlipHorizontal={() => handleFlip("horizontal")}
+            onFlipVertical={() => handleFlip("vertical")}
+            onRotate={(angle) => handleRotate(angle)}
+          >
+            {/* Upload Overlay when no image */}
+            {!isImageLoaded && (
               <CenteredUpload
                 isUploading={isUploading}
                 onImageDrop={handleImageUpload}
               />
-            </div>
-          )}
-        </div>
+            )}
+          </MobileEditorLayout>
+        ) : (
+          /* ========== DESKTOP LAYOUT ========== */
+          <>
+            {/* Vertical Toolbar (Left) */}
+            <VerticalToolbar
+              activeTab={activeTab}
+              onTabChange={(tab) => {
+                if (tab === "help") {
+                  setShowShortcuts(true);
+                } else {
+                  setActiveTab(tab);
+                }
+              }}
+              isImageLoaded={isImageLoaded}
+              onUploadClick={() =>
+                document.getElementById("centered-file-input")?.click()
+              }
+            />
 
-        {/* Right Sidebar - Adjustments (Collapsible) */}
-        <AdjustmentsPanel
-          isImageLoaded={isImageLoaded}
-          isPro={isPro}
-          currentFilters={currentFilters}
-          onFilterChange={handleFilterChange}
-          onFlip={handleFlip}
-          onRotate={handleRotate}
-          onApplyPreset={handleApplyPreset}
-          onReset={handleResetAll}
-          isCollapsed={isRightPanelCollapsed}
-          onToggleCollapse={() =>
-            setIsRightPanelCollapsed(!isRightPanelCollapsed)
-          }
-          activeTab={
-            activeTab === "filters"
-              ? "filters"
-              : activeTab === "transform"
-              ? "transform"
-              : activeTab === "presets"
-              ? "presets"
-              : "filters"
-          }
-          onTabChange={(tab) => setActiveTab(tab)}
-        />
+            {/* Upload overlay when no image - Desktop */}
+            {!isImageLoaded && (
+              <div className="absolute inset-0 bg-background/95 z-10 pointer-events-none flex items-center justify-center">
+                <div className="pointer-events-auto">
+                  <CenteredUpload
+                    isUploading={isUploading}
+                    onImageDrop={handleImageUpload}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Right Sidebar - Adjustments (Collapsible) */}
+            <AdjustmentsPanel
+              isImageLoaded={isImageLoaded}
+              isPro={isPro}
+              currentFilters={currentFilters}
+              onFilterChange={handleFilterChange}
+              onFlip={handleFlip}
+              onRotate={handleRotate}
+              onApplyPreset={handleApplyPreset}
+              onReset={handleResetAll}
+              isCollapsed={isRightPanelCollapsed}
+              onToggleCollapse={() =>
+                setIsRightPanelCollapsed(!isRightPanelCollapsed)
+              }
+              activeTab={
+                activeTab === "filters"
+                  ? "filters"
+                  : activeTab === "transform"
+                  ? "transform"
+                  : activeTab === "presets"
+                  ? "presets"
+                  : "filters"
+              }
+              onTabChange={(tab) => setActiveTab(tab)}
+            />
+          </>
+        )}
       </div>
 
       {/* Footer */}

@@ -31,7 +31,7 @@ export function EditorFooter({
   isSaving = false,
 }: EditorFooterProps) {
   return (
-    <div className="flex h-8 items-center justify-between border-t px-4 bg-muted/30 text-xs">
+    <div className="hidden md:flex h-8 items-center justify-between border-t px-4 bg-muted/30 text-xs">
       {/* Left: Status */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">

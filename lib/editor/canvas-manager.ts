@@ -214,11 +214,38 @@ export class CanvasManager {
   }
 
   resize(width: number, height: number): void {
-    if (this.stage) {
-      this.stage.width(width);
-      this.stage.height(height);
-      this.layer?.draw();
+    if (!this.stage) return;
+
+    this.stage.width(width);
+    this.stage.height(height);
+
+    // Re-fit image if exists
+    if (this.imageNode && this.imageElement) {
+      const imageRatio = this.imageElement.width / this.imageElement.height;
+      const stageRatio = width / height;
+
+      let newWidth = width;
+      let newHeight = height;
+
+      if (imageRatio > stageRatio) {
+        newHeight = width / imageRatio;
+      } else {
+        newWidth = height * imageRatio;
+      }
+
+      // Reposition to center
+      const x = width / 2;
+      const y = height / 2;
+
+      this.imageNode.x(x);
+      this.imageNode.y(y);
+      this.imageNode.width(newWidth);
+      this.imageNode.height(newHeight);
+      this.imageNode.offsetX(newWidth / 2);
+      this.imageNode.offsetY(newHeight / 2);
     }
+
+    this.layer?.batchDraw();
   }
 
   destroy(): void {

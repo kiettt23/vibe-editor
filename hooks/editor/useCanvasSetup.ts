@@ -18,9 +18,14 @@ export function useCanvasSetup(containerId: string = "konva-container") {
 
     const initCanvas = () => {
       try {
-        // Calculate canvas size (responsive)
-        const containerWidth = Math.max(window.innerWidth - 640, 600);
-        const containerHeight = Math.max(window.innerHeight - 64, 400);
+        // Calculate canvas size (responsive for mobile and desktop)
+        const isMobile = window.innerWidth < 768;
+        const containerWidth = isMobile
+          ? window.innerWidth - 32 // Mobile: full width minus padding
+          : Math.max(window.innerWidth - 640, 600); // Desktop: minus sidebars
+        const containerHeight = isMobile
+          ? window.innerHeight - 128 // Mobile: minus header + footer
+          : Math.max(window.innerHeight - 128, 400); // Desktop: minus header + footer
 
         const canvasManager = getCanvasManager();
         canvasManager.initialize(containerId, containerWidth, containerHeight);
@@ -39,6 +44,25 @@ export function useCanvasSetup(containerId: string = "konva-container") {
             }
           });
         }
+
+        // Listen for window resize to adjust canvas
+        const handleResize = () => {
+          const isMobile = window.innerWidth < 768;
+          const newWidth = isMobile
+            ? window.innerWidth - 32
+            : Math.max(window.innerWidth - 640, 600);
+          const newHeight = isMobile
+            ? window.innerHeight - 128
+            : Math.max(window.innerHeight - 128, 400);
+
+          canvasManager.resize(newWidth, newHeight);
+        };
+
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+          window.removeEventListener("resize", handleResize);
+        };
       } catch (error) {
         console.error("Init error:", error);
         if (mounted) {

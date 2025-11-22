@@ -40,6 +40,7 @@ interface AdjustmentsPanelProps {
   onToggleCollapse?: () => void;
   activeTab?: "filters" | "transform" | "presets";
   onTabChange?: (tab: "filters" | "transform" | "presets") => void;
+  isMobileSheet?: boolean; // NEW: Flag for mobile bottom sheet mode
 }
 
 export function AdjustmentsPanel({
@@ -55,9 +56,10 @@ export function AdjustmentsPanel({
   onToggleCollapse,
   activeTab = "filters",
   onTabChange,
+  isMobileSheet = false,
 }: AdjustmentsPanelProps) {
-  // Collapsed state
-  if (isCollapsed) {
+  // Collapsed state (desktop only)
+  if (isCollapsed && !isMobileSheet) {
     return (
       <div className="w-12 border-l bg-muted/5 flex flex-col items-center">
         <div className="border-b p-2">
@@ -75,28 +77,31 @@ export function AdjustmentsPanel({
   }
 
   return (
-    <div className="w-80 border-l bg-muted/5">
+    <div className={isMobileSheet ? "w-full" : "w-80 border-l bg-muted/5"}>
       <div className="flex h-full flex-col">
-        <div className="border-b px-5 py-3.5 bg-card/30 flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">
-              Điều chỉnh & Filters
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Tùy chỉnh filters và effects
-            </p>
+        {/* Header - Hide on mobile sheet */}
+        {!isMobileSheet && (
+          <div className="border-b px-5 py-3.5 bg-card/30 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">
+                Điều chỉnh & Filters
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Tùy chỉnh filters và effects
+              </p>
+            </div>
+            {onToggleCollapse && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleCollapse}
+                className="h-8 w-8 -mr-2"
+              >
+                <ChevronLeft className="h-4 w-4 rotate-180" />
+              </Button>
+            )}
           </div>
-          {onToggleCollapse && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleCollapse}
-              className="h-8 w-8 -mr-2"
-            >
-              <ChevronLeft className="h-4 w-4 rotate-180" />
-            </Button>
-          )}
-        </div>
+        )}
 
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
