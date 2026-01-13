@@ -2,6 +2,41 @@
 
 **Công cụ chỉnh sửa ảnh online mạnh mẽ, nhanh chóng, và dễ sử dụng. 100% chạy trên trình duyệt.**
 
+---
+
+## 📖 **About / Giới thiệu**
+
+**VibeEditor** là dự án dự thi **Viet My Vibe Code Hackathon** - một cuộc thi lập trình nhằm tạo ra các sản phẩm công nghệ sáng tạo và hữu ích cho cộng đồng.
+
+### 🎯 **Về dự án này**
+
+Trong kỷ nguyên số, việc chỉnh sửa ảnh trở nên quan trọng hơn bao giờ hết. Tuy nhiên, nhiều công cụ chỉnh sửa ảnh hiện nay:
+- Yêu cầu cài đặt phần mềm phức tạp
+- Tốn kém chi phí (Adobe Photoshop, Lightroom...)
+- Khó sử dụng với người dùng phổ thông
+- Cần tải ảnh lên server (lo ngại về bảo mật)
+
+**VibeEditor** được tạo ra để giải quyết những vấn đề này với một giải pháp:
+- ✨ **100% Browser-based** - Không cần cài đặt, chạy hoàn toàn trên trình duyệt
+- 🔒 **Privacy First** - Ảnh được xử lý local, không upload lên server
+- 🚀 **Fast & Responsive** - Tối ưu hiệu năng, phản hồi tức thì
+- 💰 **Freemium Model** - Free tier đầy đủ tính năng cơ bản, Pro cho nhu cầu nâng cao
+- 🎨 **Professional Quality** - Filters và công cụ chỉnh sửa chuyên nghiệp
+- 📱 **Cross-platform** - Hoạt động trên mọi thiết bị (Desktop, Tablet, Mobile)
+
+### 🏆 **Viet My Vibe Code Hackathon**
+
+Dự án này được phát triển cho **Viet My Vibe Code Hackathon** với mục tiêu:
+- Tạo ra một công cụ thực tế, hữu ích cho người dùng Việt Nam
+- Áp dụng công nghệ web hiện đại (Next.js 16, React 19, Supabase)
+- Xây dựng sản phẩm có tính thương mại hóa (monetization với Stripe)
+- Thể hiện kỹ năng full-stack development từ Frontend đến Backend, Database, và Payment
+- Tạo ra trải nghiệm người dùng (UX/UI) chuyên nghiệp và dễ sử dụng
+
+**Đội ngũ:** Kiet Tran (@kiettt23)  
+**Timeline:** Phát triển trong khuôn khổ Viet My Vibe Code Hackathon  
+**Tech Stack:** Next.js 16, React 19, TypeScript, Supabase, Stripe, Konva.js
+
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
