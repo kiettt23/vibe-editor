@@ -1,6 +1,18 @@
 # 🎨 VibeEditor - Professional Online Image Editor
 
-**Công cụ chỉnh sửa ảnh online mạnh mẽ, nhanh chóng, và dễ sử dụng. 100% chạy trên trình duyệt.**
+<div align="center">
+
+### 🏆 **TOP 4 FINALIST - VIET MY VIBE CODE HACKATHON 2026** 🏆
+
+_Qualified from Round 1 to Finals | Solo Project_
+
+[![Hackathon](https://img.shields.io/badge/🏆_Viet_My_Vibe_Code_Hackathon-Top_4_Finalist-gold?style=for-the-badge)](https://vibe-editor-ten.vercel.app)
+
+</div>
+
+---
+
+**A powerful, fast, and easy-to-use online image editor runs in your browser.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue?style=flat-square&logo=react)](https://react.dev/)
@@ -19,48 +31,70 @@
 
 ---
 
+## 💡 **Why This Project Stands Out**
+
+> **A complete production-ready SaaS built solo from scratch in 2 weeks.**
+
+| Aspect          | What I Built                                                                           |
+| --------------- | -------------------------------------------------------------------------------------- |
+| 🎨 **Frontend** | Real-time Canvas editing with Konva.js, 10+ filters, keyboard shortcuts, responsive UI |
+| 🔐 **Auth**     | OAuth (Google) + Email/Password, multi-session support, Supabase Auth                  |
+| 💳 **Payments** | Full Stripe integration: checkout, subscriptions, webhooks, billing portal             |
+| 📦 **Backend**  | Server Actions, PostgreSQL database, file storage, API routes                          |
+| 🚀 **DevOps**   | CI/CD with Vercel, environment management, production deployment                       |
+| 🎯 **Product**  | Freemium model, project limits, usage tracking, onboarding flow                        |
+
+**Key Achievements:**
+
+- ✅ Built a **complete SaaS product** - not just a demo or proof-of-concept
+- ✅ Implemented **real business logic** - subscriptions, trials, billing management
+- ✅ **100% client-side image processing** - zero server load for editing operations
+- ✅ Modern stack: **Next.js 16 + React 19 + TypeScript** (latest versions)
+
+---
+
 ## ✨ **Features**
 
 ### **🎨 Core Editor**
 
-- ✅ **Drag & Drop Upload** - Kéo thả ảnh trực tiếp vào editor
-- ✅ **Real-time Adjustments** - Điều chỉnh Brightness, Contrast, Saturation, Hue, Blur
+- ✅ **Drag & Drop Upload** - Drop images directly into the editor
+- ✅ **Real-time Adjustments** - Brightness, Contrast, Saturation, Hue, Blur controls
 - ✅ **Transform Tools** - Flip, Rotate, Scale, Zoom
 - ✅ **10 Professional Filters** - Instagram-style presets (Vintage, Vibrant, B&W, Sepia...)
 - ✅ **Keyboard Shortcuts** - Ctrl+S (Save), Ctrl+E (Export), Ctrl+R (Reset), Esc (Close)
-- ✅ **High-Quality Export** - PNG, JPEG, WebP với quality control
-- ✅ **Auto-save** - Tự động lưu project sau 3 giây
+- ✅ **High-Quality Export** - PNG, JPEG, WebP with quality control
+- ✅ **Auto-save** - Automatically saves project after 3 seconds
 
 ### **💼 Project Management**
 
-- ✅ **Dashboard** - Quản lý tất cả projects trong một nơi
-- ✅ **Thumbnail Generation** - Tự động tạo preview cho mỗi project
+- ✅ **Dashboard** - Manage all projects in one place
+- ✅ **Thumbnail Generation** - Auto-generated previews for each project
 - ✅ **Project Limits** - Free: 5 projects, Pro: Unlimited
-- ✅ **Stats Cards** - Xem tổng quan projects, last updated
+- ✅ **Stats Cards** - Overview of projects, last updated
 
 ### **🔐 Authentication**
 
-- ✅ **Email/Password** - Signup và Login truyền thống
-- ✅ **OAuth Google** - Đăng nhập nhanh bằng Google
-- ✅ **Multi-Session** - Quản lý nhiều accounts, switch dễ dàng
+- ✅ **Email/Password** - Traditional signup and login
+- ✅ **OAuth Google** - Quick sign-in with Google
+- ✅ **Multi-Session** - Manage multiple accounts, easy switching
 - ✅ **User Profiles** - Avatar, name, email management
 
 ### **💳 Monetization**
 
-- ✅ **Stripe Integration** - Checkout flow cho Pro plans
-- ✅ **Monthly/Yearly Plans** - Thanh toán linh hoạt
-- ✅ **3-day Free Trial** - Dùng thử Pro miễn phí
+- ✅ **Stripe Integration** - Checkout flow for Pro plans
+- ✅ **Monthly/Yearly Plans** - Flexible billing options
+- ✅ **3-day Free Trial** - Try Pro for free
 - ✅ **Billing Portal** - Cancel, update payment methods
-- ✅ **Webhook Automation** - Tự động sync subscription status
+- ✅ **Webhook Automation** - Auto-sync subscription status
 
 ### **🎯 UI/UX**
 
-- ✅ **Responsive Design** - Hoạt động trên mọi thiết bị
-- ✅ **Dark Mode** - Tự động theo system preference
+- ✅ **Responsive Design** - Works on all devices
+- ✅ **Dark Mode** - Follows system preference
 - ✅ **Loading States** - Skeleton loaders everywhere
 - ✅ **Error Boundaries** - Graceful error handling
 - ✅ **Toast Notifications** - Real-time feedback
-- ✅ **Pro Gate Modal** - Lock features cho Free users
+- ✅ **Pro Gate Modal** - Lock features for Free users
 
 ---
 
@@ -114,8 +148,6 @@ NEXT_PUBLIC_STRIPE_PRICE_YEARLY=price_xxx
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-**Hướng dẫn chi tiết:** [ENV_SETUP.md](./ENV_SETUP.md)
-
 **Quick links:**
 
 - **Supabase:** [Supabase Dashboard](https://supabase.com/dashboard)
@@ -148,7 +180,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 - **Hosting:** Vercel
 - **CI/CD:** Vercel Git Integration
-- **Monitoring:** Vercel Analytics _(Optional: Sentry)_
+- **Monitoring:** Vercel Analytics
 
 ---
 
@@ -190,29 +222,27 @@ vibe-editor/
 
 ## 🗺️ **Roadmap**
 
-Xem chi tiết tại [ROADMAP.md](./ROADMAP.md)
+### **Phase 2 - Advanced Editor**
 
-### **Phase 2 - Advanced Editor (Q1 2026)**
-
-- [ ] Text Tool với custom fonts
+- [ ] Text Tool with custom fonts
 - [ ] Shape Tools (Rectangle, Circle, Polygon)
 - [ ] Layer System
 - [ ] Advanced Filters (Curves, Levels)
 
-### **Phase 3 - AI Features (Q2 2026)**
+### **Phase 3 - AI Features**
 
 - [ ] AI Background Removal
 - [ ] AI Image Upscale
 - [ ] AI Object Removal
 - [ ] AI Auto-Enhance
 
-### **Phase 4 - Collaboration (Q3 2026)**
+### **Phase 4 - Collaboration**
 
 - [ ] Team Workspaces
 - [ ] Real-time Collaboration
 - [ ] Comments & Annotations
 
-### **Phase 5 - Advanced (Q4 2026)**
+### **Phase 5 - Advanced**
 
 - [ ] Batch Processing
 - [ ] Preset Management
@@ -260,7 +290,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 **Contact**
 
 - **Author:** Kiet Tran (@kiettt23)
-- **Email:** support@vibeeditor.vn _(Coming Soon)_
+- **Email:** kiettt23@gmail.com
 - **GitHub:** [https://github.com/kiettt23/vibe-editor](https://github.com/kiettt23/vibe-editor)
 - **Issues:** [https://github.com/kiettt23/vibe-editor/issues](https://github.com/kiettt23/vibe-editor/issues)
 
@@ -275,4 +305,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by Kiet Tran**
+**Made by Kiet**
